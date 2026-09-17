@@ -7,6 +7,9 @@ qa-shots/
 output/
 .gev-logs/
 .gev-cache/
+i18n-coverage.json
+i18n-dicts-report.json
+i18n-audit/
 .DS_Store
 .gstack/
 3d-models/

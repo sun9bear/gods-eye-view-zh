@@ -41,16 +41,59 @@ export function formatKnots(knots) {
 }
 
 /**
+ * East-Asian Wide / Fullwidth code points. In a fixed-advance context these
+ * occupy two monospace cells, not one — CJK, Hangul, Kana, and the CJK
+ * punctuation/fullwidth form blocks that the Chinese UI strings use.
+ * Deliberately code-point based (not a Unicode property escape) so the module
+ * stays portable across the Node versions this repo tests on.
+ */
+function isWideCode(code) {
+  return (
+    (code >= 0x1100 && code <= 0x115f) || // Hangul Jamo
+    (code >= 0x2e80 && code <= 0x303e) || // CJK radicals, Kangxi, CJK symbols
+    (code >= 0x3041 && code <= 0x33ff) || // Kana, CJK compatibility
+    (code >= 0x3400 && code <= 0x4dbf) || // CJK ext A
+    (code >= 0x4e00 && code <= 0x9fff) || // CJK unified ideographs
+    (code >= 0xa000 && code <= 0xa4cf) || // Yi
+    (code >= 0xac00 && code <= 0xd7a3) || // Hangul syllables
+    (code >= 0xf900 && code <= 0xfaff) || // CJK compatibility ideographs
+    (code >= 0xfe10 && code <= 0xfe19) || // vertical forms
+    (code >= 0xfe30 && code <= 0xfe6f) || // CJK compatibility forms
+    (code >= 0xff00 && code <= 0xff60) || // fullwidth forms
+    (code >= 0xffe0 && code <= 0xffe6) // fullwidth signs
+  );
+}
+
+/**
+ * Counts a monospace string in **cell units** rather than UTF-16 units:
+ * ASCII and other narrow glyphs count 1, East-Asian wide/fullwidth glyphs
+ * count 2. Surrogate pairs (emoji, rare CJK beyond the BMP) count 2 by way of
+ * their two code units, which matches their rendered double-cell width.
+ * @param {string} text - The string to measure.
+ * @returns {number} Cell count (0 for empty/null).
+ */
+export function textAdvance(text) {
+  if (!text) return 0;
+  const s = String(text);
+  let cells = 0;
+  for (let i = 0; i < s.length; i++) cells += isWideCode(s.charCodeAt(i)) ? 2 : 1;
+  return cells;
+}
+
+/**
  * Estimates the pixel width of a monospace string without touching the canvas.
- * For a fixed-advance font, width is exactly length × advance — this avoids a
+ * For a fixed-advance font, width is exactly cellCount × advance — this avoids a
  * per-label measureText() call (the old per-frame hot-path stall).
+ *
+ * Wide (CJK/fullwidth) glyphs are counted as two cells, so translated labels
+ * keep their background card in sync. Pure-ASCII input is unchanged.
  * @param {string} text - The string to measure.
  * @param {number} charWidth - Per-glyph advance width in pixels.
  * @returns {number} Estimated width in pixels (0 for empty/null).
  */
 export function monoTextWidth(text, charWidth) {
   if (!text) return 0;
-  return text.length * charWidth;
+  return textAdvance(text) * charWidth;
 }
 
 /**

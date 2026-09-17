@@ -24,6 +24,23 @@ import { WORLD_OVERLAY_STYLE } from './worldOverlayTokens.js';
  * generation; this host owns projection, final placement, paint, and hits.
  */
 
+/**
+ * Canvas 侧界面文案的翻译钩子。
+ *
+ * 卡片标题与明细在 normalizeEntry 里就翻掉，**必须早于 measureOverlayEntry**
+ * ——卡片宽高由 ctx.measureText 实测得出，先翻再测，中文卡片尺寸才正确；
+ * 若在绘制时才翻，背景框会按英文宽度算，中文会溢出。
+ *
+ * 翻译层（public/i18n/gev-zh.js）未加载时原样返回，所以：
+ *   - 单元测试（Node 环境没有 GEV_I18N）行为与改动前完全一致
+ *   - 关掉翻译层即回到纯英文
+ */
+function overlayText(value) {
+  const text = String(value ?? '');
+  const t = globalThis.GEV_I18N?.t;
+  return typeof t === 'function' ? t(text) : text;
+}
+
 const ROOT_ID = 'world-overlay-root';
 const CANVAS_ID = 'world-overlay-canvas';
 const DETECTION_SURFACE_ID = 'world-overlay-detection-surface';
@@ -417,8 +434,8 @@ export function normalizeOverlayEntry(sourceId, entry) {
     position: entry.position,
     cullPosition: snapshotCullPosition(entry),
     variant,
-    title: String(entry.title ?? ''),
-    details: Array.isArray(entry.details) ? entry.details.map((line) => String(line)) : [],
+    title: overlayText(entry.title ?? ''),
+    details: Array.isArray(entry.details) ? entry.details.map((line) => overlayText(line)) : [],
     accent: entry.accent || WORLD_OVERLAY_STYLE.accent,
     paintLane: entry.paintLane,
     priority: Number.isFinite(Number(entry.priority)) ? Number(entry.priority) : 0,

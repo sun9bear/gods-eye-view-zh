@@ -186,10 +186,17 @@ export function createFrames({ state: layerState, services, parts, source }) {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
+    // 状态行整串过一次翻译钩子：feedType 代码（IMAGE / VIDEO）与
+    // 客户端兜底串（NO FEED）会被翻掉；camera.name / camera.city 是专名数据，
+    // health.message 是服务端产出的诊断文本，字典里没有对应项，自然保持原样。
+    const t = globalThis.GEV_I18N?.t;
     const label = String(camera?.name || 'CCTV');
     const city = String(camera?.city || 'GLOBAL');
-    const status = String(
+    const rawStatus = String(
       health?.message || health?.status || camera?.feedType || 'NO FEED',
+    );
+    const status = String(
+      typeof t === 'function' ? t(rawStatus) : rawStatus,
     ).toUpperCase();
 
     ctx.strokeStyle = 'rgba(0, 220, 255, 0.24)';

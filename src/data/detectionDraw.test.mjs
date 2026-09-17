@@ -7,6 +7,7 @@ import {
   formatFlightLevel,
   formatKnots,
   monoTextWidth,
+  textAdvance,
   composeLabel,
   acquireAlpha,
   appendCornerBracket,
@@ -42,6 +43,29 @@ test('monoTextWidth multiplies length by advance, 0 for empty', () => {
   assert.equal(monoTextWidth('ABCD', 6), 24);
   assert.equal(monoTextWidth('', 6), 0);
   assert.equal(monoTextWidth(null, 6), 0);
+});
+
+test('textAdvance counts wide glyphs as two cells so translated labels size correctly', () => {
+  // ASCII is unchanged: one cell per code unit.
+  assert.equal(textAdvance('SWA3339'), 7);
+  // CJK ideographs render at double the monospace advance.
+  assert.equal(textAdvance('船舶'), 4);
+  assert.equal(textAdvance('军机 · FL280'), 2 + 2 + 3 + 5);
+  // The fullwidth punctuation the Chinese dictionary emits is wide …
+  assert.equal(textAdvance('（CC BY 4.0）'), 2 + 9 + 2);
+  // … while a middle dot stays narrow.
+  assert.equal(textAdvance('·'), 1);
+  // Surrogate pairs (non-BMP) fall back to their two code units, which happens
+  // to match their rendered two-cell width.
+  assert.equal(textAdvance('🛰'), 2);
+  assert.equal(textAdvance(''), 0);
+  assert.equal(textAdvance(null), 0);
+});
+
+test('monoTextWidth stays proportional between English and Chinese labels', () => {
+  const charWidth = 6;
+  assert.equal(monoTextWidth('船舶', charWidth), 4 * charWidth);
+  assert.equal(monoTextWidth('VESSEL', charWidth), 6 * charWidth);
 });
 
 test('composeLabel: id only -> empty secondary (degrades to today)', () => {
