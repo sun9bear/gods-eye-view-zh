@@ -2,12 +2,32 @@
 
 Thanks for being here. God's Eye View is an open foundation for live spatial intelligence in the browser, and it gets better when more people run it, break it, and extend it.
 
+## Read this first: unofficial fork
+
+This repository is an **unofficial multilingual fork**. See
+[FORK-NOTICE.md](FORK-NOTICE.md) for the base commit, the complete list of
+changes, and the non-commercial constraint its bundled data imposes.
+
+What that means for contributions here:
+
+- **Translation work belongs here** — new languages, wording fixes, and anything
+  under `public/i18n/`. This is the fork's own lane; see
+  [`public/i18n/README.md`](public/i18n/README.md).
+- **Most other work belongs upstream.** New layers, data sources, providers,
+  voice features, and architectural changes should go to the upstream project,
+  which is the canonical home for them:
+  <https://github.com/bilawalsidhu/gods-eye-view>
+- **Fork-specific bugs** — translation errors, language switching, layout
+  breakage caused by a translated string — belong in this repository's issues.
+  Upstream bugs go upstream. Switching to English (`Ctrl+Alt+L`) tells you
+  which is which.
+
 ## Getting set up
 
 Use Node.js 24.14.x or 26.x (also enforced by `package.json`).
 
 ```bash
-git clone https://github.com/bilawalsidhu/gods-eye-view.git
+git clone https://github.com/sun9bear/gods-eye-view-zh.git
 cd gods-eye-view
 nvm install 24.14.0
 nvm use 24.14.0
@@ -88,10 +108,16 @@ ownership and adoption process.
 
 ## Maintainers
 
-God's Eye View is maintained by [Bilawal Sidhu](https://github.com/bilawalsidhu)
-and [Sameh Khamis](https://github.com/samehkhamis) at
-[Halfpixel](https://halfpixel.ai). Either maintainer can review and merge
-contributions.
+**Upstream God's Eye View** is maintained by
+[Bilawal Sidhu](https://github.com/bilawalsidhu) and
+[Sameh Khamis](https://github.com/samehkhamis) at
+[Halfpixel](https://halfpixel.ai). They maintain the English original, not this
+fork — send upstream-facing changes to
+[their repository](https://github.com/bilawalsidhu/gods-eye-view).
+
+**This fork** is maintained by `sun9bear`. Only the translation layer
+and the small set of fork-specific patches listed in
+[FORK-NOTICE.md](FORK-NOTICE.md) are maintained here.
 
 ## Ground rules
 

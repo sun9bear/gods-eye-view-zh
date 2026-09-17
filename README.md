@@ -1,8 +1,20 @@
 <div align="center">
 
+> ### ⚠️ Unofficial fork · 非官方分支
+>
+> This is an **unofficial multilingual fork** of God's Eye View. It adds
+> **简体中文 / 繁體中文 / 日本語 / 한국어** interfaces. It is **not** affiliated
+> with, endorsed by, or supported by the upstream author — please don't send
+> this fork's issues upstream. **Non-commercial use only.**
+> → [FORK-NOTICE.md](FORK-NOTICE.md) · [中文说明](README.zh-Hans.md)
+>
+> 这是 God's Eye View 的**非官方多语言分支**，新增简体中文 / 繁體中文 / 日本語 / 한국어
+> 界面。与上游作者无关、未获其背书，请勿把本分支的问题报给上游。**仅限非商业用途。**
+> → [FORK-NOTICE.md](FORK-NOTICE.md) · [中文说明](README.zh-Hans.md)
+
 # 🌐 God's Eye View
 
-[![CI](https://github.com/bilawalsidhu/gods-eye-view/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bilawalsidhu/gods-eye-view/actions/workflows/ci.yml)
+[![CI](https://github.com/sun9bear/gods-eye-view-zh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sun9bear/gods-eye-view-zh/actions/workflows/ci.yml)
 
 ### A spy-satellite simulator in your browser — then you realize the sources are public and the data is real.
 
@@ -17,6 +29,8 @@ _No place left behind._
 </a>
 
 ▶️ **From the project behind the viral God's Eye View series** _(formerly WorldView)_ — [5M+ on YouTube](https://youtube.com/playlist?list=PL6qSg2I-7_koPbDnSMo0QeeHX_RknA2uv&si=nBGYMoHWQw41v93Q) · [25M+ across socials](https://www.google.com/search?q=god%27s+eye+view)
+
+<sub>Everything in this block, and the badges below it, describes the **upstream** project. This fork inherits its code, not its reach.</sub>
 
 [![Reached #1 on GitHub Trending](https://img.shields.io/badge/%231_GitHub_Trending-thank_you!-F0A63C?style=flat-square&logo=github)](https://x.com/bilawalsidhu/status/2093798887815348521)
 
@@ -34,9 +48,53 @@ _“pretty cool”_ — [Brendan Eich](https://x.com/BrendanEich/status/20945920
 
 <div align="center">
 
-**[Quick Start](#-quick-start) · [First Five Minutes](#-the-first-five-minutes) · [Talk to It](#-talk-to-it) · [What's Live](#-whats-on-the-globe) · [Under the Hood](#-under-the-hood) · [Keys & Costs](#-api-keys)**
+**[Quick Start](#-quick-start) · [Languages](#-languages--语言) · [First Five Minutes](#-the-first-five-minutes) · [Talk to It](#-talk-to-it) · [What's Live](#-whats-on-the-globe) · [Under the Hood](#-under-the-hood) · [Keys & Costs](#-api-keys)**
 
 </div>
+
+---
+
+## 🌏 Languages / 语言
+
+**This is this fork's whole point.** A runtime translation layer renders the
+interface in five languages. Switching is instant — no reload, no rebuild — and
+the English original is always one keystroke away.
+
+| Language | Select with |
+|---|---|
+| English (original) | `?lang=en` |
+| **简体中文** — default | `?lang=zh-Hans` |
+| 繁體中文 | `?lang=zh-Hant` |
+| 日本語 | `?lang=ja` |
+| 한국어 | `?lang=ko` |
+
+| Action | How |
+|---|---|
+| Cycle languages | `Ctrl+Alt+L` |
+| Set explicitly | `window.GEV_I18N.set('ja')` |
+| Current language | `window.GEV_I18N.current` |
+| Dictionary size | `window.GEV_I18N.stats()` |
+
+The choice persists in `localStorage['gev.lang']`. Aliases are accepted —
+`zh`/`zh-CN` → Simplified, `zh-TW`/`zh-HK`/`tw`/`hk` → Traditional, `jp` → Japanese,
+`kr` → Korean — and an unrecognised value is ignored rather than blanking the UI.
+
+The layer **never changes the upstream English strings**. A dictionary miss falls
+back to English rather than showing a wrong translation, so an upstream wording
+change degrades to English instead of breaking.
+
+**Adding a language takes two files and two lines of registration.** Dictionaries
+live in `public/i18n/dicts/`, and Traditional Chinese is *generated* from the
+Simplified source with `npm run i18n:gen-hant` (OpenCC) rather than
+hand-translated, so there is a single source of truth. Design notes, the pitfalls
+worth knowing, and the regression checklist are in
+[`public/i18n/README.md`](public/i18n/README.md).
+
+> **Thinking of adding German, Russian, or Arabic?** Read that document first.
+> The UI has fixed-width containers — Germanic languages run 20–40% longer than
+> English and will overflow them — and a right-to-left script needs layout
+> mirroring across the entire HUD. CJK fits comfortably; Latin-script expansion
+> and RTL are a different size of job.
 
 ---
 
@@ -95,6 +153,11 @@ app's **POWER UP** panel; [Keys & Costs](#-api-keys) explains the options.
 
 ### Path 1 — One click, no terminal
 
+> [!NOTE]
+> **The Pinokio package installs the *upstream English original*, not this
+> fork** — the language layer exists only in this repository. Use Path 1 if you
+> want the plain English app; use **Path 2** below for the multilingual one.
+
 1. Install or update [Pinokio](https://desktop.pinokio.co/) to **8.2 or later**.
 2. Open [God's Eye View in Pinokio](https://pinokio.co/apps/github-com-bilawalsidhu-gods-eye-view).
 3. Click **Install**, then **Start**.
@@ -113,7 +176,7 @@ Use **Node.js 24.x (24.14.0 or later) or 26.x**. The setup doctor warns about
 Node 25, which is end-of-life.
 
 ```bash
-git clone https://github.com/bilawalsidhu/gods-eye-view.git
+git clone https://github.com/sun9bear/gods-eye-view-zh.git
 cd gods-eye-view
 npm ci
 npm run doctor
@@ -485,7 +548,9 @@ God's Eye View runs on **public data, clear sources, and local-first execution.*
 
 **Status:** An evolving open-source client for exploration and learning — a fast, hackable foundation, not a hardened production service. Released under the **[MIT License](LICENSE)**. Bundled and live datasets carry their own terms — see **[DATA_SOURCES.md](DATA_SOURCES.md)**. Security model: **[SECURITY.md](SECURITY.md)**. Want to contribute? **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-**Maintainers:** [Bilawal Sidhu](https://github.com/bilawalsidhu) and [Sameh Khamis](https://github.com/samehkhamis) at [Halfpixel](https://halfpixel.ai).
+**Upstream maintainers:** [Bilawal Sidhu](https://github.com/bilawalsidhu) and [Sameh Khamis](https://github.com/samehkhamis) at [Halfpixel](https://halfpixel.ai) — they maintain the English original, **not** this fork.
+
+**This fork's maintainer:** `sun9bear`. Only the translation layer and the fork-specific patches listed in **[FORK-NOTICE.md](FORK-NOTICE.md)** are maintained here. Please don't send this fork's issues upstream.
 
 <sub>Media note: the capture GIFs on this page show Google Photorealistic 3D Tiles and live data layers, used promotionally with in-frame attribution; they aren't licensed for standalone reuse. See [media provenance and permissions](docs/media/README.md); full source terms in [DATA_SOURCES.md](DATA_SOURCES.md).</sub>
 

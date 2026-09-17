@@ -102,6 +102,10 @@ test('every mirror is asked with a User-Agent that identifies the application', 
   // application and version". Every outbound request must carry it, not just
   // the first: a mirror further down the list refusing an unidentified client
   // is exactly the case the fan-out exists to survive.
+  //
+  // The route-back assertion below deliberately accepts any owner/repo pair.
+  // What the policy requires is an identifiable contact path — not one
+  // particular repository — and forks repoint that path at themselves.
   const seen = [];
   const fetchImpl = async (url, options) => {
     seen.push({ url, agent: options?.headers?.['User-Agent'] });
@@ -133,7 +137,7 @@ test('every mirror is asked with a User-Agent that identifies the application', 
     );
     assert.match(
       agent,
-      /github\.com\/bilawalsidhu\/gods-eye-view/,
+      /github\.com\/[^/\s]+\/gods-eye-view/,
       `${request.url} must carry a route back to the project`,
     );
   }

@@ -52,3 +52,67 @@ The 3D models under public/models/ are also third-party works and are NOT
 licensed under MIT. They remain under their individual licenses. See
 public/models/README.md for the author, source, license, modification notice,
 and attribution covering each model file.
+
+---
+
+MODIFICATIONS IN THIS FORK
+本分支的修改
+
+This repository is a modified copy of the software licensed above.
+本仓库是上述软件的修改版本。
+
+  Upstream / 上游             https://github.com/bilawalsidhu/gods-eye-view
+  Upstream copyright / 版权   Copyright (c) 2026 Bilawal Sidhu
+  Fork base / 分支基线        commit 76c20be2773018164f274f3e48a25f857ceb1dd6
+                              (2026-09-15)
+  Fork maintainer / 维护者    sun9bear
+
+The original MIT notice above is retained verbatim and continues to apply to
+the upstream source code. Modifications made in this fork are released under
+the same MIT terms.
+上述 MIT 声明原文逐字保留、未作修改，继续适用于上游源码。本分支的修改同样以
+MIT 条款发布。
+
+Summary of modifications / 修改摘要:
+
+  - Added a runtime multilingual UI layer under public/i18n/, providing
+    Simplified Chinese, Traditional Chinese, Japanese, and Korean interfaces.
+    English is retained as the fallback. This layer does not alter the
+    upstream English strings and touches no business logic.
+  - Added i18n tooling under scripts/ (coverage scanner, Traditional Chinese
+    generator, visual audit).
+  - Added full-width-aware glyph advance measurement in
+    src/data/detectionDraw.js.
+  - Repointed four User-Agent / Referer values from the upstream repository to
+    this fork, so the operators of Overpass, Nominatim, CelesTrak and the GTFS
+    feeds reach the actual operator of this instance.
+
+  The complete, per-file modification record is in FORK-NOTICE.md.
+  逐文件完整修改记录见 FORK-NOTICE.md。
+
+Non-commercial declaration / 非商业声明:
+
+  This fork is declared NON-COMMERCIAL. This is not an added restriction — it
+  is what the bundled third-party data requires, in particular:
+  This fork 声明为非商业用途。这不是额外施加的限制，而是所捆绑第三方数据的要求，
+  尤其是：
+
+  - src/data/local_data/telegeography_submarine_cables/ — CC BY-NC-SA 3.0
+    (NonCommercial + ShareAlike). Retained here because this fork is
+    non-commercial. Commercial use requires deleting this directory or
+    obtaining a commercial license from TeleGeography.
+    （CC BY-NC-SA 3.0，禁止商业使用。本分支因非商业而得以保留；商用必须删除该
+    目录或另行取得 TeleGeography 的商业许可。）
+  - Cesium ion free tier: personal, non-commercial use only.
+  - OpenSky: the upstream license itself is non-commercial.
+
+  If you intend commercial use, delete the submarine-cable dataset above and
+  re-verify every source and provider's current terms. The application still
+  runs without it.
+  若计划商用，请删除上述海底电缆数据集，并重新核查每个数据源与服务商的当前条款。
+  删除后应用仍可正常运行。
+
+No API credentials are included in this fork. Providers requiring keys use a
+bring-your-own-key model; keys are written only to a git-ignored local .env.
+本分支不附带任何 API 凭据。需要凭据的数据源采用用户自备 Key 模式，Key 仅写入
+被 git 忽略的本地 .env。

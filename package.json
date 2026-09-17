@@ -2,17 +2,20 @@
   "name": "gods-eye-view",
   "private": true,
   "version": "0.1.1",
-  "description": "A real-time intelligence console for planet Earth \u2014 photorealistic 3D globe, live aircraft/ships/satellites/earthquakes/CCTV, and hands-free voice control. Runs in a browser.",
+  "description": "Unofficial multilingual fork of God's Eye View: a real-time intelligence console for planet Earth. Adds Simplified Chinese, Traditional Chinese, Japanese and Korean interfaces over the original English. Non-commercial, MIT.",
   "type": "module",
   "license": "MIT",
   "author": "Bilawal Sidhu",
-  "homepage": "https://github.com/bilawalsidhu/gods-eye-view#readme",
+  "contributors": [
+    "sun9bear (unofficial multilingual fork)"
+  ],
+  "homepage": "https://github.com/sun9bear/gods-eye-view-zh#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bilawalsidhu/gods-eye-view.git"
+    "url": "https://github.com/sun9bear/gods-eye-view-zh.git"
   },
   "bugs": {
-    "url": "https://github.com/bilawalsidhu/gods-eye-view/issues"
+    "url": "https://github.com/sun9bear/gods-eye-view-zh/issues"
   },
   "engines": {
     "node": ">=24.14.0 <25 || >=26 <27"
@@ -33,6 +36,10 @@
   ],
   "scripts": {
     "doctor": "node scripts/setup-doctor.mjs",
+    "i18n:coverage": "node scripts/i18n-coverage.mjs",
+    "i18n:audit": "node scripts/i18n-visual-audit.mjs",
+    "i18n:gen-hant": "node scripts/i18n-gen-hant.mjs",
+    "i18n:dicts": "node scripts/i18n-audit-dicts.mjs",
     "format": "node scripts/format.mjs --write",
     "format:check": "node scripts/format.mjs --check",
     "dev": "vite",

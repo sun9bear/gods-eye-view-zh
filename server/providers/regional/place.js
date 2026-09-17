@@ -14,8 +14,8 @@ import {
  */
 const NOMINATIM_HEADERS = Object.freeze({
   'User-Agent':
-    'gods-eye-view/0.1 (+https://github.com/bilawalsidhu/gods-eye-view)',
-  Referer: 'https://github.com/bilawalsidhu/gods-eye-view',
+    'gods-eye-view/0.1 (+https://github.com/sun9bear/gods-eye-view-zh)',
+  Referer: 'https://github.com/sun9bear/gods-eye-view-zh',
 });
 
 /**

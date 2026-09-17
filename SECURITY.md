@@ -6,10 +6,25 @@ God's Eye View is a local-first client for **public** data. It is built for expl
 
 Please report security issues **privately** — do not open a public issue for anything exploitable.
 
-- Use GitHub's [private vulnerability reporting](https://github.com/bilawalsidhu/gods-eye-view/security/advisories/new) (Security tab → "Report a vulnerability"), or
+- Use GitHub's [private vulnerability reporting](https://github.com/sun9bear/gods-eye-view-zh/security/advisories/new) (Security tab → "Report a vulnerability"), or
 - Reach the maintainer directly via the contact on the GitHub profile.
 
 Include repro steps and impact. We'll acknowledge, investigate, and credit you (if you'd like) once a fix ships.
+
+## Scope: this repository is an unofficial fork
+
+This is an unofficial multilingual fork of God's Eye View. The upstream project
+and its maintainer are **not** responsible for this repository — report what you
+find here to **this** repository.
+
+If the same vulnerability is also present in the upstream English original, it
+belongs upstream as well:
+
+<https://github.com/bilawalsidhu/gods-eye-view/security/advisories/new>
+
+You may need to report it in both places. Do not assume either forwards to the
+other, and do not send fork-specific findings upstream. See
+[FORK-NOTICE.md](FORK-NOTICE.md).
 
 ## How secrets are handled
 
