@@ -19,8 +19,16 @@
 一个跑在浏览器里的**实时地球情报台**：照片级 3D 地球，叠加实时的飞机、船舶、卫星、
 地震、路况、公共摄像头与无线电。数据全部来自公开源。
 
-这个分支只做了一件事：**把界面翻译成了中文**（另附繁體中文、日本語、한국어）。
-功能、架构、数据源与上游英文原版完全一致。
+这个分支的主要工作是**把界面翻译成中文**（另附繁體中文、日本語、한국어）。
+
+它**不是**上游的逐位复刻：除界面文案外，本分支会改动
+
+- `index.html` 加翻译层引入，`package.json` 加几个脚本；
+- DISPLAY 面板新增一个语言选择框（上游没有这个入口）；
+- canvas 绘制路径上几个**可选**调用点（`worldOverlay.js` / `frames.js` / `detectionDraw.js` / `splitFlap.js`），未加载翻译层时行为不变；
+- 抽掉个别运行期字符串的歧义（如路由面板的 `CLEAR` 芯片让开与天气 `CLEAR` 的撞车）。
+
+因此：**功能与数据源以上游为准，界面文案与上述几处改动属于本分支**。判断一个缺陷是不是本分支引入的，不要只看它出现在中英文哪一侧——两边都要在未修改的上游版本上复现过才能定论。
 
 ---
 
@@ -59,8 +67,8 @@
 需要 **Node.js 24.14.0+ 或 26.x**。
 
 ```bash
-git clone https://github.com/YOUR-GITHUB-USER/gods-eye-view.git
-cd gods-eye-view
+git clone https://github.com/sun9bear/gods-eye-view-zh.git
+cd gods-eye-view-zh
 npm ci
 npm run doctor
 npm run dev
@@ -82,40 +90,53 @@ Key 是**升级项**，不是前置条件。需要时点右下角的 **POWER UP*
 
 | Key | 开启什么 | 备注 |
 |---|---|---|
-| **Cesium ion**（免费） | 世界地形 + ion 托管的 Google 3D | 免费额度限**个人非商业** |
+| **Cesium ion**（免费） | 世界地形 + ion 托管的 Google 3D | 免费额度限**个人非商业**；token 由浏览器使用 |
 | **Google Maps**（计量付费） | 照片级 3D + 地点搜索 | 浏览器端 Key，**必须**设来源限制 |
 | **OpenAI** | 语音控制（对话式操作） | 按量计费，Key 只留在服务端 |
 | **AISStream**（免费） | 实时船舶 | |
 | **NASA FIRMS**（免费） | 活火点 | |
-| **TomTom**（有免费额度） | 实时路况 | 不填则路况是模拟数据 |
+| **TomTom**（有免费额度） | **实时流速／拥堵颜色**，驱动模拟车流 | 车辆点位仍是模拟，**不是**真实单车轨迹；不填则连流速也是模拟 |
 
-Key 只写入本地被 git 忽略的 `.env`，**绝不要提交进仓库**。
+凭据分两类，别混为一谈：
+
+- **服务端密钥**（OpenAI 等）：只写入本地被 git 忽略的 `.env`，不会下发给访问者。
+- **浏览器可见凭据**（Google Maps Key、Cesium ion token）：**必然**由浏览器直接携带发出。它们不是秘密，保护手段是**在服务商侧设来源限制**，不是靠不公开。上游的「服务商设置」弹窗里也是这么写的。
+
+两类都**绝不要提交进仓库**。
 
 ---
 
-## 在中国大陆使用的实测注意事项
+## 在中国大陆使用的联网注意事项
 
-这是我在本机（武汉）实测后记录的真实情况，不是推测。
+2026-09-15/16 在武汉本机实测过一轮（结果见下），**实测有日期、不是永久事实**：网络环境随时可能变化，遇到图层不可用时按下面的方法逐个端点核对。
 
-### 一、美国 `.gov` 域名可能全部不通
+### 一、逐个检查失败的数据端点
 
-实测结果：`earthquake.usgs.gov`、`firms.modaps.eosdis.nasa.gov`、`api.weather.gov`、
-`data.austintexas.gov`、`data.texas.gov` **全部 TLS 握手失败**，
-而 AWS / Cloudflare 等对照域名正常返回 200。DNS 解析本身是通的。
-
-**影响**：`Earthquakes`（地震）、`Active Fires`（活火点）、`Transit`（公交）三个图层
-会显示 `UNAVAILABLE · Failed to fetch`。其中 **Active Fires 即使买了 NASA Key 也用不了**
-——问题在链路，不在凭据。
-
-**排查方向**：查代理规则里是否有把 `\.gov$` 或 `geosite:gov` 送去直连的条目，改成走代理。
+2026-09-15/16 的本机排查记录涉及 `earthquake.usgs.gov`、`firms.modaps.eosdis.nasa.gov`、`api.weather.gov`、`data.austintexas.gov`、`data.texas.gov` 的请求失败；部分图层显示 `UNAVAILABLE · Failed to fetch`。这些历史现象不能单独证明当前故障原因，也不能据此断言凭据有效或无效。先定位失败请求与发起端，再检查路由、DNS、TLS、HTTP 响应、凭据和配额；不要仅凭域名后缀批量改代理规则。
 
 ```bash
-# 修好的判据：应返回 200
-curl -o /dev/null -w "%{http_code}\n" https://www.usgs.gov/
+# 粗测链路是否通（返回非 000 说明能连上；仅作链路粗测，不能代表图层恢复）
+curl -o /dev/null -w "%{http_code}\n" https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson
 ```
 
-注意：**浏览器发出的外部请求数为 0**，所有数据都经过本地服务端代理。
-所以这不是浏览器的问题，是 Node 服务端的网络问题。
+**注意：HTTP 200 只说明此次端点请求返回成功状态**，还需验证响应格式、内容、浏览器 CORS 和数据时效；命令行请求成功不能代替浏览器验证。恢复判据应结合应用请求成功、数据被正确解析以及图层呈现预期状态（空数据也可能是有效结果）。`www.usgs.gov` 首页的状态码与数据接口（`earthquake.usgs.gov/earthquakes/feed/...`）是两条链路，不要用首页判断数据链路。
+
+如果某个图层仍显示 `UNAVAILABLE` / `Failed to fetch`，先确认具体 URL、请求发起位置及错误类型，再分别检查链路、凭据、配额与响应。更换 Key 不能修复已确认的链路故障，但在未测量前也不能排除凭据问题。
+
+注意：**多数数据源经本地服务端代理，但并非全部**。源码核查确认**浏览器直连**的至少有这些：
+
+| 浏览器直连的东西 | 出处 |
+|---|---|
+| 地震数据 | `src/layers/earthquakes/source.js` 直接请求 USGS |
+| Google Fonts 字体 | `index.html` |
+| 电台音频（播放后） | 直连广播方，见 `SECURITY.md` |
+| **底图瓦片** | `src/maps/imagery.js:9` 的 `https://tile.openstreetmap.org/`（OSM）、`services.arcgisonline.com`（Esri）；Cesium 的 ion 地形 / Google 3D 瓦片同理 |
+
+所以排障要分清方向，**三**条路都要查：
+
+- 图层数据（飞机 / 船舶 / 活火点等）不通 → 查**服务端**网络；
+- **底图、3D 瓦片、地形不通（白球、贴图缺失、一直转圈）** → 查**浏览器侧**网络，这类请求不经过本地服务端；
+- 字体异常或地震图层不通 → 同样查浏览器侧。
 
 ### 二、浏览器控制台会报字体加载失败
 
@@ -133,20 +154,33 @@ Google Fonts 与 Material Symbols 图标字体在国内可能加载不出来。
 
 ## 本分支与原版的差异
 
-**只多了一层界面翻译，没有改任何业务逻辑。**
+**以运行时界面翻译为主，同时修改了少量显示与状态处理代码，不能视为完全不改行为的覆盖层。**
 
 | 改动 | 文件 |
 |---|---|
 | 新增翻译引擎与 4 份字典 | `public/i18n/` |
-| 新增三个 i18n 工具脚本 | `scripts/i18n-*.mjs` |
+| 新增覆盖率、布局、字典审计、繁体生成、运行时回归、键位对齐与运行时字符串核对脚本 | `scripts/i18n-*.mjs` |
+| 翻牌原始输入状态隔离与竞态收尾；缓存卡片随语言切换重翻 | `src/splitFlap.js`、`src/overlays/worldOverlay.js` 及对应测试 |
 | canvas 文案走字典 + 全角宽度修正 | `src/overlays/worldOverlay.js`、`src/layers/cctv/frames.js`、`src/data/detectionDraw.js` |
+| 新增可见语言入口（DISPLAY 面板下拉框） | `src/ui/templates/display-controls.html`、`src/ui/styles/controls.css` |
+| 消歧属性 `data-gev-i18n-skip-text`（引擎 + 一处芯片） | `public/i18n/gev-i18n.js`、`src/ui/layerPanel.js`、`src/layers/directions/index.js` |
 | 引入翻译层（1 行） | `index.html` |
 | 元数据与上报路径指向本分支 | `package.json`、`.github/`、`SECURITY.md`、`CONTRIBUTING.md` |
 | User-Agent / Referer 指向本分支 | 4 个数据源代理文件 |
 
-`src/` 侧的翻译调用全部是「有翻译层才翻译，没有就原样返回」的可选钩子，
-所以 **Node 测试环境下行为与上游逐位一致**——上游自带的 305 个测试文件、
-3904 项断言在本分支全绿。
+没有翻译钩子时返回原文，但全角宽度计算与翻牌状态隔离仍是源码行为变更。
+
+**测试数字要连日期和批次一起看**（不同批次的检查数不同，不能互相当成「最新」）：
+
+| 批次 | 日期 | 结果 |
+|---|---|---|
+| 单元测试（`npm test`） | 2026-09-17 | 3922 项：3913 通过、9 跳过、0 失败 |
+| 浏览器运行时回归（`scripts/i18n-runtime-test.mjs`） | 2026-09-17 | 407 项检查全部通过，0 页面 console 错误 |
+| 生产页面语言入口验收（`scripts/i18n-live-verify.mjs`） | 2026-09-17 | 30 场景通过（3 分辨率 × 5 语言 × 折叠/展开） |
+| 运行时字符串覆盖（`scripts/i18n-claim-audit.mjs`） | 2026-09-17 | 61 用例 × 4 语言，漏译 0 |
+
+> 早期文档里的「浏览器回归 209/209」是更早一批的检查数，与 407 不是同一批次，已停止引用。
+> 测试通过不等于与上游逐位一致，也不代表全部真实数据状态与布局都已验收。
 
 技术细节、踩过的坑与回归清单见 [`public/i18n/README.md`](public/i18n/README.md)。
 
@@ -196,7 +230,7 @@ Google Fonts 与 Material Symbols 图标字体在国内可能加载不出来。
 
 ## 反馈
 
-**先切回英文（`Ctrl+Alt+L` 或 `?lang=en`）确认问题归属。**
+**先切回英文（`Ctrl+Alt+L` 或 `?lang=en`）看一下问题还在不在——这是一项排查步骤，不是归属判据。**
 
 | 问题类型 | 报给谁 |
 |---|---|
@@ -204,7 +238,7 @@ Google Fonts 与 Material Symbols 图标字体在国内可能加载不出来。
 | 上游原生的功能缺陷、数据源失效、性能问题 | [上游 Issues](https://github.com/bilawalsidhu/gods-eye-view/issues) |
 | 安全漏洞（可被利用的） | 私有渠道，见 [SECURITY.md](SECURITY.md) |
 
-问题在英文下同样出现 → 那是上游的问题。
+**切回英文变正常，不等于问题就是翻译造成的。** 本分支除了文案还改了翻牌状态隔离、canvas 绘制路径与一处消歧属性，这些在英文下同样生效；反过来，有些翻译缺陷（如动态串漏译）在英文下根本看不出来。要在**未修改的上游版本**上用相同环境与步骤复现过，再决定报到上游。网络、凭据和时序问题请一并记录。
 
 ---
 

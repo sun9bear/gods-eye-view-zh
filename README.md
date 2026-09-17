@@ -177,7 +177,7 @@ Node 25, which is end-of-life.
 
 ```bash
 git clone https://github.com/sun9bear/gods-eye-view-zh.git
-cd gods-eye-view
+cd gods-eye-view-zh
 npm ci
 npm run doctor
 npm run dev

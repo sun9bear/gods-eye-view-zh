@@ -19,8 +19,11 @@ What that means for contributions here:
   <https://github.com/bilawalsidhu/gods-eye-view>
 - **Fork-specific bugs** — translation errors, language switching, layout
   breakage caused by a translated string — belong in this repository's issues.
-  Upstream bugs go upstream. Switching to English (`Ctrl+Alt+L`) tells you
-  which is which.
+  Switching to English (`Ctrl+Alt+L`) is a diagnostic step, not proof of
+  ownership: non-translation changes in this fork can also affect English mode.
+  Reproduce against an unmodified upstream checkout under equivalent conditions
+  before filing upstream. Include network, credentials (redacted), and timing
+  observations in the report.
 
 ## Getting set up
 
@@ -28,7 +31,7 @@ Use Node.js 24.14.x or 26.x (also enforced by `package.json`).
 
 ```bash
 git clone https://github.com/sun9bear/gods-eye-view-zh.git
-cd gods-eye-view
+cd gods-eye-view-zh
 nvm install 24.14.0
 nvm use 24.14.0
 npm install
