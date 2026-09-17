@@ -2144,3 +2144,120 @@ test('diagnostics facade preserves the complete binding shape', () => {
   ];
   assert.deepEqual(Object.keys(diagnostics).sort(), fields.sort());
 });
+
+// ── Original-language snapshot + language-change re-translation ──────────────
+// The renderer translates title/details at normalize time, so a later language
+// flip must re-translate from a captured ORIGINAL (not the already-translated)
+// string. These pin both the snapshot shape and the live gev:language-changed
+// repaint so neither the thumbnail title nor the card size can lag the language.
+
+test('normalizeOverlayEntry snapshots original text and translates the thumbnail title from it', () => {
+  globalThis.GEV_I18N = { t: (text) => (String(text) === 'FIRE' ? '火' : String(text)) };
+  try {
+    const entry = normalizeOverlayEntry('src', {
+      id: 't',
+      position: position(),
+      variant: 'thumbnail',
+      title: 'FIRE',
+      thumbnailTitleChars: 1,
+    });
+    assert.equal(entry._overlaySourceTitle, 'FIRE', 'the raw source title is snapshotted untranslated');
+    assert.deepEqual(entry._overlaySourceDetails, [], 'an absent details list snapshots to an empty array');
+    assert.equal(entry.title, '火', 'the rendered title is translated from the snapshot');
+    assert.equal(entry._overlayThumbnailTitle, '火', 'the thumbnail title derives from the translated title');
+
+    const cardEntry = normalizeOverlayEntry('src', { id: 'c', position: position(), variant: 'card', title: 'FIRE' });
+    assert.equal(cardEntry._overlayThumbnailTitle, '', 'non-thumbnail variants carry no thumbnail title');
+  } finally {
+    delete globalThis.GEV_I18N;
+  }
+});
+
+test('cached cards re-translate text, recompute size, and drop the listener on destroy without re-setEntries', () => {
+  // A mutable fake i18n layer: the translate function reads the live `lang`, so
+  // swapping `lang` and dispatching `gev:language-changed` must re-paint already
+  // cached entries with no call back into setOverlayEntries/upsert.
+  let lang = 'en';
+  const dictionary = {
+    en: { FIRE: 'FIRE', SMOKE: 'SMOKE' },
+    zh: { FIRE: '火', SMOKE: '烟' },
+    ja: { FIRE: '火事', SMOKE: '煙' },
+  };
+  globalThis.GEV_I18N = {
+    t(text) {
+      const translated = dictionary[lang][String(text)];
+      return translated === undefined ? String(text) : translated;
+    },
+  };
+  try {
+    const env = installMockEnvironment({ width: 400, height: 300, dpr: 1 });
+    initWorldOverlay(env.viewer);
+    assert.equal(env.window.listenerCount('gev:language-changed'), 1,
+      'the host registers exactly one gev:language-changed listener');
+
+    const setCard = () => setOverlayEntries('lang-host', [{
+      id: 'card-a',
+      position: position(),
+      variant: 'card',
+      title: 'FIRE',
+      details: ['SMOKE'],
+      selected: true,
+      protected: true,
+      horizonCull: false,
+      edgeFade: 'none',
+    }]);
+
+    const raiseAndPaintTitles = () => {
+      env.ctx.calls.length = 0;
+      env.postRender.raise();
+      return env.ctx.calls
+        .filter((call) => call[0] === 'fillText')
+        .map((call) => call[1]);
+    };
+
+    setCard();
+    let titles = raiseAndPaintTitles();
+    assert.ok(titles.includes('FIRE'), 'english paints the original title');
+    assert.ok(titles.includes('SMOKE'), 'english paints the original detail');
+    const enWidth = getOverlayPaintRect('lang-host', 'card-a').w;
+
+    lang = 'zh';
+    env.window.dispatch('gev:language-changed', { detail: { lang: 'zh' } });
+    titles = raiseAndPaintTitles();
+    assert.ok(titles.includes('火'), 'zh re-paints the cached card without setEntries');
+    assert.ok(titles.includes('烟'), 'zh re-paints the cached detail without setEntries');
+    const zhWidth = getOverlayPaintRect('lang-host', 'card-a').w;
+    assert.ok(zhWidth !== enWidth && zhWidth < enWidth, 'the card width is recalculated for the shorter zh text');
+
+    lang = 'ja';
+    env.window.dispatch('gev:language-changed', { detail: { lang: 'ja' } });
+    titles = raiseAndPaintTitles();
+    assert.ok(titles.includes('火事'), 'ja re-paints the cached card');
+    assert.ok(titles.includes('煙'), 'ja re-paints the cached detail');
+    const jaWidth = getOverlayPaintRect('lang-host', 'card-a').w;
+    assert.ok(jaWidth !== zhWidth, 'the card width is recalculated for ja');
+
+    lang = 'en';
+    env.window.dispatch('gev:language-changed', { detail: { lang: 'en' } });
+    titles = raiseAndPaintTitles();
+    assert.ok(titles.includes('FIRE'), 'en restores the original title');
+    assert.ok(titles.includes('SMOKE'), 'en restores the original detail');
+    assert.equal(getOverlayPaintRect('lang-host', 'card-a').w, enWidth, 'width returns to the english size');
+
+    // Listener cleanup: after destroy the host must no longer hold the listener,
+    // and firing the event must not throw or repaint a torn-down host.
+    destroyWorldOverlay();
+    assert.equal(env.window.listenerCount('gev:language-changed'), 0,
+      'destroy removes the gev:language-changed listener');
+    assert.doesNotThrow(() => env.window.dispatch('gev:language-changed', { detail: { lang: 'zh' } }));
+
+    // A fresh init re-registers exactly one listener.
+    initWorldOverlay(env.viewer);
+    assert.equal(env.window.listenerCount('gev:language-changed'), 1,
+      're-init re-registers a single listener');
+
+    env.cleanup();
+  } finally {
+    delete globalThis.GEV_I18N;
+  }
+});

@@ -151,6 +151,23 @@ export const dict = {
   'OpenStreetMap + optional Google Maps Places': 'OpenStreetMap + 선택적 Google Places',
   'CCTV + Street View fallback': 'CCTV + 스트리트 뷰 대체',
   'OSM routing': 'OSM 경로 탐색',
+  /* 경로 안내 칩 (src/layers/directions/index.js:110-168) */
+  'SET A': 'A 지정',
+  'SET B': 'B 지정',
+  'CLICK MAP': '지도 클릭',
+  FLY: '비행',
+  'FLY ···': '비행 중 ···',
+  FLYING: '비행 중',
+  'Swap A and B': 'A 와 B 교환',
+  'Then click the globe to place the start': '그다음 지구본을 클릭해 출발지를 지정하세요',
+  'Then click the globe to place the destination': '그다음 지구본을 클릭해 목적지를 지정하세요',
+  'Click a spot on the globe to place A (click again to cancel)':
+    '지구본을 클릭해 A 를 배치 (다시 클릭하면 취소)',
+  'Click a spot on the globe to place B (click again to cancel)':
+    '지구본을 클릭해 B 를 배치 (다시 클릭하면 취소)',
+  'Fly the camera along the route': '경로를 따라 카메라 비행',
+  'Place A and B first': '먼저 A 와 B 를 배치하세요',
+  'Remove the route and both markers': '경로와 두 마커 제거',
   LIVE: '실시간',
 
   /* ----------------------------------------------------------- 장면 */
@@ -243,11 +260,16 @@ export const dict = {
   'SOURCE · UNKNOWN': '소스 · 알 수 없음',
   'Enable CCTV to load camera intersections': '카메라를 켜면 교차로 영상을 불러옵니다',
   'CCTV OFF': '카메라 꺼짐',
+  'CCTV ON': '카메라 켜짐',
   NEAREST: '가장 가까운',
   FOCUS: '포커스',
   'COVERAGE ON': '커버리지 켜짐',
+  'COVERAGE OFF': '커버리지 꺼짐',
+  'VIEWSHED ON': '시야 켜짐',
   'AUTO HOP OFF': '자동 전환 꺼짐',
+  'AUTO HOP ON': '자동 전환 켜짐',
   'PROJECTION ON': '투영 켜짐',
+  'PROJECTION OFF': '투영 꺼짐',
   CALIBRATION: '캘리브레이션',
   CAL: '캘리브',
   ADJUST: '조정',
@@ -324,6 +346,13 @@ export const dict = {
   'Internet radio companion': '인터넷 라디오',
   'RADIO READY': '라디오 준비됨',
   'RADIO OFF': '라디오 꺼짐',
+  'PAUSE': '일시정지',
+  'RESUME': '재개',
+  'ENABLING': '사용 설정 중',
+  'DISABLING': '사용 해제 중',
+  'UNCERTAIN': '상태 불명',
+  'RADIO STATE UNCERTAIN': '라디오 상태 불명',
+  'DISABLE': '끄기',
   'STATION TAG': '방송국 태그',
   'Filter stations by station tag': '방송국 태그로 필터',
   'NO STATION SELECTED': '선택된 방송국 없음',
@@ -340,6 +369,11 @@ export const dict = {
   'Next filtered radio station': '필터 내 다음 방송국',
   'Stop radio playback': '재생 정지',
   'Play nearest radio station': '가장 가까운 방송국 재생',
+  'Pause selected radio station': '선택한 방송국 일시정지',
+  'Resume selected radio station': '선택한 방송국 재개',
+  'Play selected radio station': '선택한 방송국 재생',
+  'Pause nearest radio station': '가장 가까운 방송국 일시정지',
+  'Resume nearest radio station': '가장 가까운 방송국 재개',
   'Radio volume': '라디오 볼륨',
   'Cockpit Radio volume': '조종석 라디오 볼륨',
   'Radio off': '라디오가 꺼져 있습니다',
@@ -350,6 +384,7 @@ export const dict = {
   'Previous station': '이전 방송국',
   'Next station': '다음 방송국',
   'Enable Radio': '라디오 켜기',
+  'Disable Radio': '라디오 끄기',
   ENABLE: '켜기',
   VOLUME: '볼륨',
   PLAY: '재생',
@@ -393,7 +428,7 @@ export const dict = {
   KTS: 'kt',
   FT: 'ft',
   'FIRST PERSON': '1인칭',
-  AIRCRAFT: '기종',
+  AIRCRAFT: '항공기',
   'LIVE TRACK · COURSE ALIGNED': '실시간 항적 · 침로 일치',
   'Cockpit vision style': '조종석 시각 스타일',
   'Previous cockpit vision style': '이전 시각 스타일',
@@ -407,6 +442,21 @@ export const dict = {
   'Contact cockpit summary': '대상 조종석 요약',
   'Contact navigation': '대상 내비게이션',
   'Enable cockpit weather effects': '조종석 기상 효과 켜기',
+  'Disable cockpit weather effects': '조종석 기상 효과 끄기',
+  /* 기상 라벨 (src/data/regionalModel.js:94 weatherCodeLabel, WMO 코드 기반) */
+  CLEAR: '맑음',
+  'PARTLY CLOUDY': '구름 조금',
+  OVERCAST: '흐림',
+  FOG: '안개',
+  DRIZZLE: '이슬비',
+  RAIN: '비',
+  'RAIN SHOWERS': '소나기',
+  SNOW: '눈',
+  'SNOW SHOWERS': '눈 소나기',
+  THUNDERSTORM: '뇌우',
+  'MIXED CONDITIONS': '변덕스러운 날씨',
+  'CONDITIONS UNKNOWN': '날씨 미상',
+  'CLOUD UNKNOWN': '운량 미상',
   WX: '기상',
   'Cockpit briefing carousel': '조종석 브리핑',
   'Estimated flight plan': '추정 비행 계획',
@@ -631,12 +681,12 @@ export const dict = {
   'MAPPED INSTALLATION': '지도상 시설',
   'ALPR CAMERA': '번호판 판독 카메라',
   VESSEL: '선박',
-  DOCKED: '정박 중',
+  DOCKED: '도킹 중',
   LAUNCHER: '발사체',
   SPACECRAFT: '우주선',
   PAYLOAD: '탑재체',
   RECOVERED: '회수 완료',
-  LOST: '분실',
+  LOST: '회수 실패',
   'RECOVERY ATTEMPT': '회수 시도',
   'NO RECOVERY DATA': '회수 데이터 없음',
   REUSED: '재사용',
@@ -656,6 +706,37 @@ export const dict = {
   CAMERAS: '카메라',
   OFF: '꺼짐',
   ON: '켜짐',
+
+  /* ============ 재시도 / 설치 피드백 / 키 상태（추가） ============ */
+  /* keySetup 칩: 누락 키 없음（src/keySetup.js:22） */
+  'POWERED UP': '전원 켜짐',
+  /* 카메라 재시도 상세 세그먼트: "ALPR cameras · retrying in Ns" / "ALPR cameras · retry pending" */
+  'ALPR cameras': '번호판 판독 카메라',
+  'retry pending': '재시도 대기',
+  /* installationFeedback 사유（layerPanel meta 는 원래 대소문자, 로드 오버레이 라벨은 대문자화） */
+  'Overpass rate-limited': 'Overpass 속도 제한됨',
+  'Overpass timed out': 'Overpass 시간 초과',
+  'Overpass could not complete the query': 'Overpass 쿼리를 완료하지 못함',
+  'Overpass temporarily unavailable': 'Overpass 일시적으로 사용 불가',
+  'OVERPASS RATE-LIMITED': 'Overpass 속도 제한됨',
+  'OVERPASS TIMED OUT': 'Overpass 시간 초과',
+  'OVERPASS COULD NOT COMPLETE THE QUERY': 'Overpass 쿼리를 완료하지 못함',
+  'OVERPASS TEMPORARILY UNAVAILABLE': 'Overpass 일시적으로 사용 불가',
+  /* installationFeedback 나머지 상태（원래 대소문자, layerPanel guidance meta 용） */
+  'Retrying mapped sites…': '지도상 시설 재시도 중…',
+  'Fetching mapped sites…': '지도상 시설 불러오는 중…',
+  'Zoom in to search mapped installations': '확대하여 지도상 시설 검색',
+  'Showing cached mapped sites': '캐시된 지도상 시설 표시 중',
+  'Mapped sites not loaded': '지도상 시설 미로드',
+  'Mapped sites loaded': '지도상 시설 로드됨',
+  /* loadingFeedback 로드 오버레이 재시도 라벨（대문자 상수） */
+  'RETRYING ALPR CAMERAS': '번호판 판독 카메라 재시도 중',
+  'FETCHING ALPR CAMERAS': '번호판 판독 카메라 불러오는 중',
+  'RETRYING MAPPED SITES': '지도상 시설 재시도 중',
+  'FETCHING MAPPED SITES': '지도상 시설 불러오는 중',
+  'MAPPED SITES LOADED': '지도상 시설 로드됨',
+  /* layerPanel meta: 수명 주기 상태 재조정 필요（src/ui/layerPanel.js:473） */
+  'lifecycle state requires reconciliation': '수명 주기 상태 재조정 필요',
 };
 
 /* ------------------------------------------------------------------ 규칙 */
@@ -667,35 +748,97 @@ export const rules = [
   [/^(\d+)h ago$/, (m) => `${m[1]}시간 전`],
   [/^(\d+)d ago$/, (m) => `${m[1]}일 전`],
   [/^retry (\d+)s$/, (m) => `${m[1]}초 후 재시도`],
+  [/^retrying in (\d+)s$/, (m) => `${m[1]}초 후 재시도`],
 
   /* 항공편 대체(fallback) 시의 커버리지 표기.
      원문은 서버에서 `${반경}nm regional fallback` 로 조립된다
      (server/providers/aircraft/opensky.js). 반경은 상수지만 바뀔 수 있어 규칙으로 받는다. */
   [/^(\d+)nm regional fallback$/, (m) => `${m[1]}nm 지역 대체`],
 
-  /* 레이어 스위치 aria-label: "Satellites: OFF" */
+  /* 레이어 aria-label / 버튼 표기: "Satellites: OFF", "Radio: UNAVAILABLE".
+     상태는 src/ui/layerPanel.js:5 FEED_STATE_LABELS 와 :549 의 라이프사이클 분기에서
+     ON/OFF/LOADING/DEGRADED/STALE/FALLBACK/UNAVAILABLE/UNCERTAIN/ENABLING/DISABLING.
+     이전 판은 OFF|ON 만 처리해 나머지 8개 상태가 번역되지 않았다.
+     한국어는 반각 콜론을 쓴다(다른 언어의 전각 '：' 와 다름). */
   [
-    /^(.+?):\s*(OFF|ON)$/,
-    (m) => `${dict[m[1]] || m[1]}: ${m[2] === 'OFF' ? '꺼짐' : '켜짐'}`,
+    /^(.+?):\s*(ON|OFF|LOADING|DEGRADED|STALE|FALLBACK|UNAVAILABLE|UNCERTAIN|ENABLING|DISABLING)$/,
+    (m) => `${dict[m[1]] || m[1]}: ${dict[m[2]] || m[2]}`,
   ],
 
-  /* 키 개수 안내 */
-  [/^POWER UP · (\d+) KEYS WAITING$/, (m) => `전원 켜기 · 남은 키 ${m[1]}개`],
+  /* 조종석 운량: "CLOUD 70%" (src/ui/cockpitBriefing.js:244) */
+  [/^CLOUD (\d+)%$/, (m) => `운량 ${m[1]}%`],
 
-  /* 장면 샷 */
+  /* 키 개수 안내 */
+  [/^POWER UP · (\d+) (KEY|KEYS) WAITING$/, (m) => `전원 켜기 · 남은 키 ${m[1]}개`],
+
+  /* 장면 샷: `${style} · ${mode} · ${dur}s + ${hold}s`
+     (src/ui/scenePresentation.js:87). 두 번째 항목은 감지 모드로
+     src/data/detection.js:77 MODE_LABELS = ['OFF','SPARSE','BALANCED','DENSE']. */
   [/^Shot (\d+)$/, (m) => `샷 ${m[1]}`],
   [
-    /^RETRO · (OFF|ON) · ([\d.]+)s \+ ([\d.]+)s$/,
-    (m) => `리플레이 · ${m[1] === 'OFF' ? '꺼짐' : '켜짐'} · ${m[2]}초 + ${m[3]}초`,
+    /^(NORMAL|RETRO|SURVEILLANCE|THERMAL) · (OFF|SPARSE|BALANCED|DENSE) · ([\d.]+)s \+ ([\d.]+)s$/,
+    (m) => {
+      const style = {
+        NORMAL: '표준',
+        RETRO: '레트로 CRT',
+        SURVEILLANCE: '감시',
+        THERMAL: '열영상',
+      }[m[1]];
+      const mode = {
+        OFF: '꺼짐',
+        SPARSE: '희박',
+        BALANCED: '균형',
+        DENSE: '밀집',
+      }[m[2]];
+      return `${style} · ${mode} · ${m[3]}초 + ${m[4]}초`;
+    },
   ],
 
   /* 위치 트레이: 지명은 동적이므로 캡처해 넣는다 */
   [/^Flying to (.+)\.\.\.$/, (m) => `${m[1]}(으)로 이동 중…`],
 
-  /* 음성 모델 안내: 모델 ID는 바뀐다 */
+  /* 음성 모델 안내 (src/voice/realtimeController.js:1824):
+     모델 ID는 바뀌고 동작도 mini / standard 로 뒤집힌다.
+     세션 중 불일치가 있으면 "Next session: …" 분기가 된다. */
   [
-    /^Voice model: (.+?) — click to switch to mini; applies next session$/,
-    (m) => `음성 모델: ${m[1]} — 클릭하면 미니로 전환, 다음 세션부터 적용`,
+    /^Voice model: (.+?) — click to switch to (mini|standard); applies next session$/,
+    (m) =>
+      `음성 모델: ${m[1]} — 클릭하면 ${m[2] === 'mini' ? '미니' : '표준'}로 전환, 다음 세션부터 적용`,
+  ],
+  [
+    /^Next session: (.+?) — this session stays on (.+)$/,
+    (m) => `다음 세션: ${m[1]} — 이번 세션은 ${m[2]} 유지`,
+  ],
+
+  /* 세션 비용 툴팁 (src/voice/realtimeController.js:1837):
+     모델 ID, 응답 횟수, 두 임계값, 끝의 note 가 모두 실행 시점에 삽입된다. */
+  [
+    /^Estimated session cost on (.+?) — (\d+) response\(s\)\. Warns at ~\$([\d.]+), ends the session at ~\$([\d.]+)\. Estimate is incomplete — a response was still in flight when the session ended, so its usage was never reported\.$/,
+    (m) =>
+      `${m[1]} 예상 세션 비용 — 응답 ${m[2]}회. 약 $${m[3]}에서 경고, 약 $${m[4]}에서 세션 종료. 추정 불완전 — 세션 종료 시점에 응답이 처리 중이어서 사용량이 보고되지 않았습니다.`,
+  ],
+  [
+    /^Estimated session cost on (.+?) — (\d+) response\(s\)\. Warns at ~\$([\d.]+), ends the session at ~\$([\d.]+)\.$/,
+    (m) => `${m[1]} 예상 세션 비용 — 응답 ${m[2]}회. 약 $${m[3]}에서 경고, 약 $${m[4]}에서 세션 종료.`,
+  ],
+  [
+    /^Estimate is incomplete — a response was still in flight when the session ended, so its usage was never reported\.$/,
+    () =>
+      '추정 불완전 — 세션 종료 시점에 응답이 처리 중이어서 사용량이 보고되지 않았습니다.',
+  ],
+
+  /* Overpass 재시도 연결 문자열 (src/data/installationFeedback.js:14).
+     원문은 `${이유} — ${카운트다운}` 처럼 **대시**로 이어진다.
+     번역층의 분할은 ` · ` 뿐이라 이 문자열은 잘리지 않았고,
+     로딩 오버레이는 자체적으로 split(' — ') 하므로 같은 상태에서도
+     오버레이는 번역되고 레이어 패널은 번역되지 않는 차이가 있었다. */
+  [
+    /^(Overpass (?:temporarily unavailable|rate-limited|timed out|could not complete the query)) — retrying in (\d+)s$/,
+    (m) => `${dict[m[1]] || m[1]} — ${m[2]}초 후 재시도`,
+  ],
+  [
+    /^(Overpass (?:temporarily unavailable|rate-limited|timed out|could not complete the query)) — retry pending$/,
+    (m) => `${dict[m[1]] || m[1]} — 재시도 대기 중`,
   ],
 
   /* 조합형 툴팁: "Expand LOCATION" 등.
@@ -749,6 +892,10 @@ export const partial = [
   ['ALT ', '고도 '],
   ['SUN: ', '태양: '],
   ['SUN ', '태양 '],
+  /* ONA = Off-Nadir Angle(천저 이탈각). HUD 는 약어 위주 화면이라
+     ja 사전과 동일하게 약어를 유지한다. (zh 는 '偏角' 으로 옮겼는데,
+     이 용어 선택은 원어민 검토가 필요하다 — public/i18n/README.md 참고) */
+  ['ONA: ', 'ONA: '],
   ['WINDOW ', '윈도 '],
   ['ONA ', 'ONA '],
   ['EL', '앙각'],

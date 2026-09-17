@@ -151,6 +151,23 @@ export const dict = {
   'OpenStreetMap + optional Google Maps Places': 'OpenStreetMap + 任意で Google プレイス',
   'CCTV + Street View fallback': 'CCTV + ストリートビュー代替',
   'OSM routing': 'OSM 経路探索',
+  /* ルート案内チップ（src/layers/directions/index.js:110-168） */
+  'SET A': 'A を設定',
+  'SET B': 'B を設定',
+  'CLICK MAP': '地図をクリック',
+  FLY: '飛行',
+  'FLY ···': '飛行中 ···',
+  FLYING: '飛行中',
+  'Swap A and B': 'A と B を入れ替え',
+  'Then click the globe to place the start': '次に地球をクリックして出発点を置きます',
+  'Then click the globe to place the destination': '次に地球をクリックして目的地を置きます',
+  'Click a spot on the globe to place A (click again to cancel)':
+    '地球をクリックして A を配置（もう一度クリックで取消）',
+  'Click a spot on the globe to place B (click again to cancel)':
+    '地球をクリックして B を配置（もう一度クリックで取消）',
+  'Fly the camera along the route': 'カメラを経路に沿って飛行させる',
+  'Place A and B first': '先に A と B を配置してください',
+  'Remove the route and both markers': '経路と 2 つのマーカーを削除',
   LIVE: 'ライブ',
   Local: 'ローカル',
   CAMERAS: 'カメラ',
@@ -245,11 +262,16 @@ export const dict = {
   'SOURCE · UNKNOWN': 'ソース · 不明',
   'Enable CCTV to load camera intersections': 'カメラを有効にすると交差点の映像を読み込みます',
   'CCTV OFF': 'カメラ オフ',
+  'CCTV ON': 'カメラ オン',
   NEAREST: '最寄り',
   FOCUS: 'フォーカス',
   'COVERAGE ON': 'カバレッジ オン',
+  'COVERAGE OFF': 'カバレッジ オフ',
+  'VIEWSHED ON': '視域 オン',
   'AUTO HOP OFF': '自動切替 オフ',
+  'AUTO HOP ON': '自動切替 オン',
   'PROJECTION ON': '投影 オン',
+  'PROJECTION OFF': '投影 オフ',
   CALIBRATION: 'キャリブレーション',
   CAL: 'キャリブ',
   ADJUST: '調整',
@@ -324,6 +346,14 @@ export const dict = {
   'Internet radio companion': 'インターネットラジオ',
   'RADIO READY': 'ラジオ準備完了',
   'RADIO OFF': 'ラジオ オフ',
+  'PAUSE': '一時停止',
+  'RESUME': '再開',
+  'PLAY': '再生',
+  'ENABLING': '有効化中',
+  'DISABLING': '無効化中',
+  'UNCERTAIN': '状態不明',
+  'RADIO STATE UNCERTAIN': 'ラジオの状態が不明',
+  'DISABLE': 'オフにする',
   'STATION TAG': '局のタグ',
   'Filter stations by station tag': '局のタグで絞り込み',
   'NO STATION SELECTED': '局が選択されていません',
@@ -340,6 +370,11 @@ export const dict = {
   'Next filtered radio station': '絞り込み内の次の局',
   'Stop radio playback': '再生を停止',
   'Play nearest radio station': '最寄りの局を再生',
+  'Pause selected radio station': '選択中の局を一時停止',
+  'Resume selected radio station': '選択中の局を再開',
+  'Play selected radio station': '選択中の局を再生',
+  'Pause nearest radio station': '最寄りの局を一時停止',
+  'Resume nearest radio station': '最寄りの局を再開',
   'Radio volume': 'ラジオの音量',
   'Cockpit Radio volume': 'コックピットのラジオ音量',
   'Radio off': 'ラジオはオフです',
@@ -350,6 +385,7 @@ export const dict = {
   'Previous station': '前の局',
   'Next station': '次の局',
   'Enable Radio': 'ラジオを有効化',
+  'Disable Radio': 'ラジオを無効化',
   ENABLE: '有効化',
   VOLUME: '音量',
   PLAY: '再生',
@@ -393,7 +429,7 @@ export const dict = {
   KTS: 'kt',
   FT: 'ft',
   'FIRST PERSON': '一人称',
-  AIRCRAFT: '機種',
+  AIRCRAFT: '航空機',
   'LIVE TRACK · COURSE ALIGNED': 'ライブ航跡 · 針路一致',
   'Cockpit vision style': 'コックピットの視覚スタイル',
   'Previous cockpit vision style': '前の視覚スタイル',
@@ -407,6 +443,21 @@ export const dict = {
   'Contact cockpit summary': '対象のコックピット概要',
   'Contact navigation': '対象のナビゲーション',
   'Enable cockpit weather effects': 'コックピットの気象効果を有効化',
+  'Disable cockpit weather effects': 'コックピットの気象効果を無効化',
+  /* 気象ラベル（src/data/regionalModel.js:94 weatherCodeLabel、WMO コード由来） */
+  CLEAR: '晴れ',
+  'PARTLY CLOUDY': '晴れ時々曇り',
+  OVERCAST: '曇り',
+  FOG: '霧',
+  DRIZZLE: '霧雨',
+  RAIN: '雨',
+  'RAIN SHOWERS': 'にわか雨',
+  SNOW: '雪',
+  'SNOW SHOWERS': 'にわか雪',
+  THUNDERSTORM: '雷雨',
+  'MIXED CONDITIONS': '変わりやすい天気',
+  'CONDITIONS UNKNOWN': '天気不明',
+  'CLOUD UNKNOWN': '雲量不明',
   WX: '気象',
   'Cockpit briefing carousel': 'コックピットブリーフィング',
   'Estimated flight plan': '推定飛行計画',
@@ -631,12 +682,12 @@ export const dict = {
   'MAPPED INSTALLATION': '地図上の施設',
   'ALPR CAMERA': 'ナンバー読取カメラ',
   VESSEL: '船舶',
-  DOCKED: '停泊中',
+  DOCKED: 'ドッキング中',
   LAUNCHER: 'ローンチャー',
   SPACECRAFT: '宇宙機',
   PAYLOAD: 'ペイロード',
   RECOVERED: '回収済み',
-  LOST: '喪失',
+  LOST: '回収失敗',
   'RECOVERY ATTEMPT': '回収試行',
   'NO RECOVERY DATA': '回収データなし',
   REUSED: '再使用',
@@ -650,6 +701,37 @@ export const dict = {
   'SHOW NEAREST': '最寄りを表示',
   'GLOBAL CONTEXT OFF': 'グローバルコンテキスト オフ',
   'CONTEXT READY': 'コンテキスト準備完了',
+
+  /* ============ リトライ / インストールフィードバック / キー 状態（今回追加） ============ */
+  /* keySetup チップ：不足キーなしのとき（src/keySetup.js:22） */
+  'POWERED UP': '電源投入済み',
+  /* カメラ再試行詳細セグメント："ALPR cameras · retrying in Ns" / "ALPR cameras · retry pending" */
+  'ALPR cameras': 'ナンバー読取カメラ',
+  'retry pending': '再試行待ち',
+  /* installationFeedback の理由（layerPanel meta は元の大文字小文字、ロード浮層ラベルは大文字化） */
+  'Overpass rate-limited': 'Overpass がレート制限されました',
+  'Overpass timed out': 'Overpass がタイムアウトしました',
+  'Overpass could not complete the query': 'Overpass はクエリを完了できませんでした',
+  'Overpass temporarily unavailable': 'Overpass は一時的に利用できません',
+  'OVERPASS RATE-LIMITED': 'Overpass がレート制限されました',
+  'OVERPASS TIMED OUT': 'Overpass がタイムアウトしました',
+  'OVERPASS COULD NOT COMPLETE THE QUERY': 'Overpass はクエリを完了できませんでした',
+  'OVERPASS TEMPORARILY UNAVAILABLE': 'Overpass は一時的に利用できません',
+  /* installationFeedback の他の状態（元の大文字小文字、layerPanel guidance meta 用） */
+  'Retrying mapped sites…': '地図上の施設を再試行中…',
+  'Fetching mapped sites…': '地図上の施設を取得中…',
+  'Zoom in to search mapped installations': '拡大して地図上の施設を検索',
+  'Showing cached mapped sites': 'キャッシュした地図上の施設を表示中',
+  'Mapped sites not loaded': '地図上の施設は読み込まれていません',
+  'Mapped sites loaded': '地図上の施設は読み込み済み',
+  /* loadingFeedback ロード浮層の再試行ラベル（大文字定数） */
+  'RETRYING ALPR CAMERAS': 'ナンバー読取カメラを再試行中',
+  'FETCHING ALPR CAMERAS': 'ナンバー読取カメラを取得中',
+  'RETRYING MAPPED SITES': '地図上の施設を再試行中',
+  'FETCHING MAPPED SITES': '地図上の施設を取得中',
+  'MAPPED SITES LOADED': '地図上の施設は読み込み済み',
+  /* layerPanel meta：ライフサイクル状態の再調整が必要（src/ui/layerPanel.js:473） */
+  'lifecycle state requires reconciliation': 'ライフサイクル状態の再調整が必要',
 };
 
 /* ------------------------------------------------------------------ 規則 */
@@ -661,35 +743,95 @@ export const rules = [
   [/^(\d+)h ago$/, (m) => `${m[1]} 時間前`],
   [/^(\d+)d ago$/, (m) => `${m[1]} 日前`],
   [/^retry (\d+)s$/, (m) => `${m[1]} 秒後に再試行`],
+  [/^retrying in (\d+)s$/, (m) => `${m[1]} 秒後に再試行`],
 
   /* フライトのフォールバック時のカバレッジ表記。
      原文はサーバ側で `${半径}nm regional fallback` として組み立てられる
      （server/providers/aircraft/opensky.js）。半径は定数だが変わり得るので規則で受ける。 */
   [/^(\d+)nm regional fallback$/, (m) => `${m[1]}nm 広域フォールバック`],
 
-  /* レイヤースイッチの aria-label："Satellites: OFF" */
+  /* レイヤーの aria-label / ボタン表記："Satellites: OFF"、"Radio: UNAVAILABLE"。
+     状態は src/ui/layerPanel.js:5 FEED_STATE_LABELS と :549 のライフサイクル分岐から
+     ON/OFF/LOADING/DEGRADED/STALE/FALLBACK/UNAVAILABLE/UNCERTAIN/ENABLING/DISABLING。
+     旧版は OFF|ON のみで、残り 8 状態が未訳だった。 */
   [
-    /^(.+?):\s*(OFF|ON)$/,
-    (m) => `${dict[m[1]] || m[1]}：${m[2] === 'OFF' ? 'オフ' : 'オン'}`,
+    /^(.+?):\s*(ON|OFF|LOADING|DEGRADED|STALE|FALLBACK|UNAVAILABLE|UNCERTAIN|ENABLING|DISABLING)$/,
+    (m) => `${dict[m[1]] || m[1]}：${dict[m[2]] || m[2]}`,
   ],
 
-  /* キー数のヒント */
-  [/^POWER UP · (\d+) KEYS WAITING$/, (m) => `電源投入 · 残り ${m[1]} キー`],
+  /* コックピットの雲量："CLOUD 70%"（src/ui/cockpitBriefing.js:244） */
+  [/^CLOUD (\d+)%$/, (m) => `雲量 ${m[1]}%`],
 
-  /* シーンのショット */
+  /* キー数のヒント */
+  [/^POWER UP · (\d+) (KEY|KEYS) WAITING$/, (m) => `電源投入 · 残り ${m[1]} キー`],
+
+  /* シーンのショット：`${style} · ${mode} · ${dur}s + ${hold}s`
+     （src/ui/scenePresentation.js:87）。第 2 段は検出モードで
+     src/data/detection.js:77 MODE_LABELS = ['OFF','SPARSE','BALANCED','DENSE']。 */
   [/^Shot (\d+)$/, (m) => `ショット ${m[1]}`],
   [
-    /^RETRO · (OFF|ON) · ([\d.]+)s \+ ([\d.]+)s$/,
-    (m) => `リプレイ · ${m[1] === 'OFF' ? 'オフ' : 'オン'} · ${m[2]}秒 + ${m[3]}秒`,
+    /^(NORMAL|RETRO|SURVEILLANCE|THERMAL) · (OFF|SPARSE|BALANCED|DENSE) · ([\d.]+)s \+ ([\d.]+)s$/,
+    (m) => {
+      const style = {
+        NORMAL: '標準',
+        RETRO: 'レトロ CRT',
+        SURVEILLANCE: '監視',
+        THERMAL: 'サーマル',
+      }[m[1]];
+      const mode = {
+        OFF: 'オフ',
+        SPARSE: '疎',
+        BALANCED: 'バランス',
+        DENSE: '密',
+      }[m[2]];
+      return `${style} · ${mode} · ${m[3]}秒 + ${m[4]}秒`;
+    },
   ],
 
   /* 位置トレイ：地名は動的なので捕獲して埋め込む */
   [/^Flying to (.+)\.\.\.$/, (m) => `${m[1]} へ飛行中…`],
 
-  /* 音声モデルのヒント：モデル ID は変わる */
+  /* 音声モデルのヒント（src/voice/realtimeController.js:1824）：
+     モデル ID は変わり、動作も mini / standard で反転する。
+     セッション中に不一致がある場合は "Next session: …" 分岐になる。 */
   [
-    /^Voice model: (.+?) — click to switch to mini; applies next session$/,
-    (m) => `音声モデル：${m[1]} — クリックでミニに切替；次回セッションで有効`,
+    /^Voice model: (.+?) — click to switch to (mini|standard); applies next session$/,
+    (m) =>
+      `音声モデル：${m[1]} — クリックで${m[2] === 'mini' ? 'ミニ' : '標準'}に切替；次回セッションで有効`,
+  ],
+  [
+    /^Next session: (.+?) — this session stays on (.+)$/,
+    (m) => `次回セッション：${m[1]} — 今回のセッションは ${m[2]} のまま`,
+  ],
+
+  /* セッション費用のツールチップ（src/voice/realtimeController.js:1837）：
+     モデル ID・応答回数・2 つの閾値・末尾の note がすべて実行時に挿入される。 */
+  [
+    /^Estimated session cost on (.+?) — (\d+) response\(s\)\. Warns at ~\$([\d.]+), ends the session at ~\$([\d.]+)\. Estimate is incomplete — a response was still in flight when the session ended, so its usage was never reported\.$/,
+    (m) =>
+      `${m[1]} の推定セッション費用 — 応答 ${m[2]} 回。約 $${m[3]} で警告、約 $${m[4]} でセッション終了。見積もりは不完全 — セッション終了時に応答が処理中だったため、その使用量は報告されていません。`,
+  ],
+  [
+    /^Estimated session cost on (.+?) — (\d+) response\(s\)\. Warns at ~\$([\d.]+), ends the session at ~\$([\d.]+)\.$/,
+    (m) => `${m[1]} の推定セッション費用 — 応答 ${m[2]} 回。約 $${m[3]} で警告、約 $${m[4]} でセッション終了。`,
+  ],
+  [
+    /^Estimate is incomplete — a response was still in flight when the session ended, so its usage was never reported\.$/,
+    () =>
+      '見積もりは不完全 — セッション終了時に応答が処理中だったため、その使用量は報告されていません。',
+  ],
+
+  /* Overpass 再試行の連結文字列（src/data/installationFeedback.js:14）。
+     原文は `${理由} — ${カウントダウン}` と**ダッシュ**で連結されるが、
+     翻訳層の分割は ` · ` のみ。読み込みオーバーレイは自前で split(' — ') するため
+     同じ状態でも浮層は訳せてレイヤーパネルは訳せない、という差が出ていた。 */
+  [
+    /^(Overpass (?:temporarily unavailable|rate-limited|timed out|could not complete the query)) — retrying in (\d+)s$/,
+    (m) => `${dict[m[1]] || m[1]} — ${m[2]} 秒後に再試行`,
+  ],
+  [
+    /^(Overpass (?:temporarily unavailable|rate-limited|timed out|could not complete the query)) — retry pending$/,
+    (m) => `${dict[m[1]] || m[1]} — 再試行は保留中`,
   ],
 
   /* 組み合わせ式ツールチップ："Expand LOCATION" など。

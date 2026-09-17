@@ -100,6 +100,17 @@ const BLANK = ' ';
 const flapStates = new WeakMap();
 /** Teardown for an in-flight width ease (listeners, not timers). */
 const widthEases = new WeakMap();
+/**
+ * The last RAW input and the display string it produced, keyed by element.
+ *
+ * Kept entirely out of the DOM: the i18n layer rewrites the text node, so the
+ * node can never be the source of truth for "has the input changed". This cache
+ * is what makes a repeat tick with the same input a no-op (no flap, no timer)
+ * even after translation has altered the visible text, and what lets a language
+ * switch re-render without restarting an unrelated cascade. `disposeSplitFlap`
+ * clears it so a reused element re-initialises cleanly.
+ */
+const renderState = new WeakMap();
 
 function positiveNumber(value, fallback) {
   const number = Number(value);
@@ -111,6 +122,31 @@ function nowMs() {
     typeof performance.now === 'function'
     ? performance.now()
     : Date.now();
+}
+
+/**
+ * The text actually shown for a raw input. When a translation layer is loaded
+ * (global `GEV_I18N.t`), the current-language translation is preferred so the
+ * chip reads in the viewer's language; otherwise the raw input is shown, which
+ * preserves the original behaviour when no layer is present.
+ *
+ * The RAW input is always recorded separately (see `renderState`) so a repeat
+ * tick with the same input is a no-op even after the i18n layer rewrites the
+ * node — this is what stops the English source string from being re-applied
+ * over a translation.
+ */
+function displayFor(rawInput) {
+  const value = String(rawInput ?? '');
+  const i18n =
+    typeof globalThis.GEV_I18N === 'object' && globalThis.GEV_I18N !== null
+      ? globalThis.GEV_I18N
+      : null;
+  if (i18n && typeof i18n.t === 'function') {
+    const translated = i18n.t(value);
+    if (typeof translated === 'string' && translated.length > 0)
+      return translated;
+  }
+  return value;
 }
 
 /**
@@ -418,10 +454,13 @@ function rest(element, host) {
  * cascade (invariant 4), so this is where the board narrows — as one eased
  * transition, never a single-frame snap.
  */
-function settle(element, expected, easeMs) {
+function settle(element, state, easeMs) {
+  // A newer cascade (or a language switch that restarted this element) now owns
+  // the board — its own timer will strip the cells. The check is an identity
+  // comparison of the cascade object, NOT a textContent comparison: the i18n
+  // layer rewrites the node, so the settled string can never be the race token.
+  if (flapStates.get(element) !== state) return;
   flapStates.delete(element);
-  // A newer label won the race — leave its cells alone.
-  if (element.textContent !== expected) return;
   const host = ensureHost(element);
   const cascadeWidth = measureWidth(element);
   cancelWidthEase(element);
@@ -451,41 +490,55 @@ export function setSplitFlapText(element, text, options = {}) {
   // happens on a tick where the text is not changing. Every subsequent label
   // change is then a lone characterData mutation (invariant 1).
   const host = ensureHost(element);
-  // textContent is the SETTLED string even mid-cascade, so this is the right
-  // idempotence check against the repeating chip tickers.
-  const settled = element.textContent ?? '';
-  if (settled === next) return false;
+
+  // The display shown for this input under the CURRENT language. We record the
+  // RAW input and this display separately (renderState) so a repeat tick is a
+  // no-op even after the i18n layer has rewritten the node — that is what stops
+  // the English source string from being re-applied over a translation.
+  const display = displayFor(next);
+  const prior = renderState.get(element);
+  if (prior && prior.input === next && prior.display === display) return false;
 
   // What the viewer can SEE right now. Mid-cascade that is not the settled
   // string: columns whose stagger has not elapsed are still showing the
-  // previous label's glyphs, and those are what must flap away.
+  // previous label's glyphs, and those are what must flap away (invariant 3).
   const state = flapStates.get(element);
   const displayed = state
     ? visibleGlyphs(state.plan, nowMs() - state.startedAt, {
         charMs: state.charMs,
       })
-    : settled;
+    : host.text.firstChild.data;
   clearFlapTimer(element);
+
+  // A language switch (or an i18n dictionary update) changed only the display,
+  // not the underlying input: cancel any in-flight animation and write the new
+  // translation immediately, with no flap. Never restart an unrelated cascade.
+  const onlyDisplayChanged =
+    prior && prior.input === next && prior.display !== display;
 
   const beforeWidth = measureWidth(element);
 
   const animate =
+    !onlyDisplayChanged &&
     SPLIT_FLAP_ENABLED &&
     options.immediate !== true &&
     !prefersReducedMotion() &&
     isVisible(element);
 
-  const plan = animate ? planSplitFlap(displayed, next, options) : null;
+  const plan = animate ? planSplitFlap(displayed, display, options) : null;
 
   // THE ONLY TEXT OPERATION. One characterData mutation, no reparenting, so
   // the label is never transiently empty and the live region cannot see a
-  // removal/reinsertion pair (invariant 1).
-  host.text.firstChild.data = next;
+  // removal/reinsertion pair (invariant 1). Pins the current-language display
+  // (which may be a translation of `next`) so a later same-input tick cannot
+  // re-override it with the English source.
+  host.text.firstChild.data = display;
 
   if (!plan?.changedCount) {
     cancelWidthEase(element);
     clearSizing(element);
     rest(element, host);
+    renderState.set(element, { input: next, display });
     return false;
   }
 
@@ -522,16 +575,20 @@ export function setSplitFlapText(element, text, options = {}) {
   // happens in settle() instead, once the flaps have landed.
   easeWidth(element, beforeWidth, measureWidth(element), plan.durationMs);
 
-  // The one and only timer this change schedules (invariant 2).
-  flapStates.set(element, {
+  // The one and only timer this change schedules (invariant 2). The cascade
+  // object is the race token: settle() bails unless it is still the live one.
+  const cascadeState = {
     plan,
     charMs,
     startedAt: nowMs(),
-    timer: setTimeout(
-      () => settle(element, next, plan.durationMs),
-      plan.durationMs + FLAP_SETTLE_SLACK_MS,
-    ),
-  });
+    timer: null,
+  };
+  cascadeState.timer = setTimeout(
+    () => settle(element, cascadeState, plan.durationMs),
+    plan.durationMs + FLAP_SETTLE_SLACK_MS,
+  );
+  flapStates.set(element, cascadeState);
+  renderState.set(element, { input: next, display });
   return true;
 }
 
@@ -541,6 +598,8 @@ export function disposeSplitFlap(element) {
   clearFlapTimer(element);
   cancelWidthEase(element);
   clearSizing(element);
+  // Drop the raw-input cache so a reused element re-initialises cleanly.
+  renderState.delete(element);
   const cells = element.querySelector?.('.gev-flap-cells');
   if (cells) rest(element, { cells });
 }

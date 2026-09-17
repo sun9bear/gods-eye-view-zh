@@ -56,7 +56,7 @@ export const dict = {
   'loading frames': '正在加载画面',
   'SIMULATED — ADD TOMTOM KEY FOR LIVE': '模拟数据 — 加 TomTom 密钥后为实时',
   'SIMULATED — add TomTom key for live': '模拟 — 加 TomTom 密钥后为实时',
-  'FALLBACK': '降级',
+  'FALLBACK': '回退',
   'UNAVAILABLE': '不可用',
   'Failed to fetch': '请求失败',
   'feed unavailable': '数据源不可用',
@@ -99,6 +99,8 @@ export const dict = {
   'Voice control — activate to toggle voice; hold Space to speak': '语音控制 — 激活以切换语音；长按空格说话',
   'Hold Space to speak · tap Space to activate focused controls': '长按空格说话 · 轻按空格激活当前控件',
   'Check microphone permission and network access, then try again.': '请检查麦克风权限与网络连接后重试。',
+  /* 会话费用 tooltip 的默认态。变体（不同响应数 / 用户改过的阈值 / 带 note 的
+     拼接结果）由下方规则处理，不要只靠这一条冻结词条。 */
   'Estimated session cost on gpt-realtime-2 — 0 response(s). Warns at ~$2.00, ends the session at ~$5.00.':
     'gpt-realtime-2 上的预估会话费用 — 0 次响应。约 $2.00 时警告，约 $5.00 时结束会话。',
   DISMISS: '关闭',
@@ -159,6 +161,27 @@ export const dict = {
   'CCTV + Street View fallback': 'CCTV + 街景兜底',
   'USACE': 'USACE',
   'OSM routing': 'OSM 路线规划',
+  /* ------------------------------------------------- 路线导航芯片
+     整行过去零覆盖（src/layers/directions/index.js:110-168）：
+     标签走 button.textContent，提示走 button.title。
+     其中 `CLEAR` 是可视标签与其他面板撞车的那个，已由 skip-text 让开，
+     它的 title 仍走这里。 */
+  'SET A': '设 A',
+  'SET B': '设 B',
+  'CLICK MAP': '点地图',
+  FLY: '飞行',
+  'FLY ···': '飞行中 ···',
+  FLYING: '飞行中',
+  'Swap A and B': '交换 A 与 B',
+  'Then click the globe to place the start': '然后点地球放置起点',
+  'Then click the globe to place the destination': '然后点地球放置终点',
+  'Click a spot on the globe to place A (click again to cancel)':
+    '点地球上的位置放置 A（再点一次取消）',
+  'Click a spot on the globe to place B (click again to cancel)':
+    '点地球上的位置放置 B（再点一次取消）',
+  'Fly the camera along the route': '让相机沿航线飞行',
+  'Place A and B first': '请先放置 A 与 B',
+  'Remove the route and both markers': '移除航线与两个标记',
   'GTFS-RT': 'GTFS-RT',
   LIVE: '实时',
   Local: '本地',
@@ -252,11 +275,16 @@ export const dict = {
   'SOURCE · UNKNOWN': '来源 · 未知',
   'Enable CCTV to load camera intersections': '启用摄像头以加载路口画面',
   'CCTV OFF': '摄像头 关',
+  'CCTV ON': '摄像头 开',
   NEAREST: '最近',
   FOCUS: '锁定',
   'COVERAGE ON': '覆盖 开',
+  'COVERAGE OFF': '覆盖 关',
+  'VIEWSHED ON': '视域 开',
   'AUTO HOP OFF': '自动跳转 关',
+  'AUTO HOP ON': '自动跳转 开',
   'PROJECTION ON': '投影 开',
+  'PROJECTION OFF': '投影 关',
   'CALIBRATION': '标定',
   CAL: '标定',
   'ADJUST': '调整',
@@ -329,6 +357,14 @@ export const dict = {
   'Internet radio companion': '网络电台伴侣',
   'RADIO READY': '电台就绪',
   'RADIO OFF': '电台 关',
+  'PAUSE': '暂停',
+  'RESUME': '继续',
+  'PLAY': '播放',
+  'ENABLING': '启用中',
+  'DISABLING': '禁用中',
+  'UNCERTAIN': '状态不明',
+  'RADIO STATE UNCERTAIN': '电台状态不明',
+  'DISABLE': '关闭',
   'STATION TAG': '电台标签',
   'Filter stations by station tag': '按电台标签筛选',
   'NO STATION SELECTED': '未选择电台',
@@ -345,6 +381,14 @@ export const dict = {
   'Next filtered radio station': '下一个筛选电台',
   'Stop radio playback': '停止播放',
   'Play nearest radio station': '播放最近的电台',
+  /* 播放按钮的 aria-label 是 `${Pause|Resume|Play} ${selected|nearest} radio station`
+     （src/ui/radioPresentation.js:232）——按钮文字是大写 PAUSE/RESUME/PLAY（已有词条），
+     但这条小写组合过去只收录了 Play + nearest 一种。 */
+  'Pause selected radio station': '暂停选中的电台',
+  'Resume selected radio station': '继续选中的电台',
+  'Play selected radio station': '播放选中的电台',
+  'Pause nearest radio station': '暂停最近的电台',
+  'Resume nearest radio station': '继续最近的电台',
   'Radio volume': '电台音量',
   'Cockpit Radio volume': '驾驶舱电台音量',
   'Radio off': '电台已关闭',
@@ -355,6 +399,9 @@ export const dict = {
   'Previous station': '上一个电台',
   'Next station': '下一个电台',
   'Enable Radio': '启用电台',
+  /* 同一处 tooltip / aria-label 会随状态在 Enable / Disable 之间翻转
+     （src/ui/radioPresentation.js:58/81/107）——过去只收录了 Enable 一半。 */
+  'Disable Radio': '关闭电台',
   ENABLE: '启用',
   VOLUME: '音量',
   PLAY: '播放',
@@ -398,7 +445,7 @@ export const dict = {
   KTS: '节',
   FT: '英尺',
   'FIRST PERSON': '第一人称',
-  AIRCRAFT: '机型',
+  AIRCRAFT: '航空器',
   'LIVE TRACK · COURSE ALIGNED': '实时航迹 · 航向对齐',
   'Cockpit vision style': '驾驶舱视觉风格',
   'Previous cockpit vision style': '上一个驾驶舱视觉风格',
@@ -411,10 +458,31 @@ export const dict = {
   'Contact cockpit summary': '目标驾驶舱摘要',
   'Contact navigation': '目标导航',
   'Enable cockpit weather effects': '启用驾驶舱天气效果',
+  /* 同上：随状态翻转，过去只有 Enable 一半（src/ui/cockpitInstruments.js:211/213）。 */
+  'Disable cockpit weather effects': '关闭驾驶舱天气效果',
   WX: '天气',
   'Cockpit briefing carousel': '驾驶舱简报轮播',
   'Estimated flight plan': '预计飞行计划',
   'ESTIMATED FLIGHT PLAN': '预计飞行计划',
+
+  /* ------------------------------------------------- 天气读数（机舱简报）
+     WMO code → 简短英文标签，由 src/data/regionalModel.js:94 weatherCodeLabel()
+     产出，整表过去零覆盖。云量是插值串，见下方 CLOUD 规则。
+     注意 CLEAR：路由面板的芯片可视标签也是 `CLEAR`（= 清除），
+     那一侧已用 data-gev-i18n-skip-text 让开（见 directions/index.js）。 */
+  CLEAR: '晴',
+  'PARTLY CLOUDY': '局部多云',
+  OVERCAST: '阴',
+  FOG: '雾',
+  DRIZZLE: '毛毛雨',
+  RAIN: '雨',
+  'RAIN SHOWERS': '阵雨',
+  SNOW: '雪',
+  'SNOW SHOWERS': '阵雪',
+  THUNDERSTORM: '雷暴',
+  'MIXED CONDITIONS': '天气多变',
+  'CONDITIONS UNKNOWN': '天气未知',
+  'CLOUD UNKNOWN': '云量未知',
   'ROUTE DATA UNAVAILABLE': '航路数据不可用',
   FROM: '起点',
   TO: '终点',
@@ -519,7 +587,7 @@ export const dict = {
   'Apply high-contrast monochrome film-noir grading.':
     '应用高对比黑白黑色电影调色。',
   'Add a cold, snowy whiteout treatment to the scene.':
-    '给场景加上寒冷的雪盲效果。',
+    '给场景加上寒冷的雪原白化处理。',
 
   /* ------------------------------------------------- 检测叠加层 */
   'Detection overlay: dense': '检测叠加层：密集',
@@ -649,7 +717,7 @@ export const dict = {
   SPACECRAFT: '航天器',
   PAYLOAD: '载荷',
   RECOVERED: '已回收',
-  LOST: '失联',
+  LOST: '回收失败',
   'RECOVERY ATTEMPT': '尝试回收',
   'NO RECOVERY DATA': '无回收数据',
   REUSED: '复用',
@@ -663,6 +731,37 @@ export const dict = {
   'SHOW NEAREST': '显示最近',
   'GLOBAL CONTEXT OFF': '全球态势 关',
   'CONTEXT READY': '态势就绪',
+
+  /* ================= 重试 / 安装反馈 / 密钥 状态（本轮补齐） ================= */
+  /* keySetup 芯片：无缺失密钥时（src/keySetup.js:22） */
+  'POWERED UP': '已通电',
+  /* 摄像头重试详情段："ALPR cameras · retrying in Ns" / "ALPR cameras · retry pending" */
+  'ALPR cameras': '车牌识别摄像头',
+  'retry pending': '重试待定',
+  /* installationFeedback 原因（layerPanel meta 原生大小写呈现；加载浮层 label 转大写） */
+  'Overpass rate-limited': 'Overpass 已限流',
+  'Overpass timed out': 'Overpass 已超时',
+  'Overpass could not complete the query': 'Overpass 未能完成查询',
+  'Overpass temporarily unavailable': 'Overpass 暂时不可用',
+  'OVERPASS RATE-LIMITED': 'Overpass 已限流',
+  'OVERPASS TIMED OUT': 'Overpass 已超时',
+  'OVERPASS COULD NOT COMPLETE THE QUERY': 'Overpass 未能完成查询',
+  'OVERPASS TEMPORARILY UNAVAILABLE': 'Overpass 暂时不可用',
+  /* installationFeedback 其余状态（原生大小写，用于 layerPanel guidance meta） */
+  'Retrying mapped sites…': '正在重试已测绘设施…',
+  'Fetching mapped sites…': '正在获取已测绘设施…',
+  'Zoom in to search mapped installations': '放大以搜索已测绘设施',
+  'Showing cached mapped sites': '显示缓存的已测绘设施',
+  'Mapped sites not loaded': '已测绘设施未加载',
+  'Mapped sites loaded': '已测绘设施已加载',
+  /* loadingFeedback 加载浮层重试标签（大写常量） */
+  'RETRYING ALPR CAMERAS': '正在重试车牌识别摄像头',
+  'FETCHING ALPR CAMERAS': '正在获取车牌识别摄像头',
+  'RETRYING MAPPED SITES': '正在重试已测绘设施',
+  'FETCHING MAPPED SITES': '正在获取已测绘设施',
+  'MAPPED SITES LOADED': '已测绘设施已加载',
+  /* layerPanel meta：生命周期状态待校准（src/ui/layerPanel.js:473） */
+  'lifecycle state requires reconciliation': '生命周期状态需重新校准',
 };
 
 /* ------------------------------------------------------------------ 规则 */
@@ -674,24 +773,50 @@ export const rules = [
   [/^(\d+)h ago$/, (m) => `${m[1]} 小时前`],
   [/^(\d+)d ago$/, (m) => `${m[1]} 天前`],
   [/^retry (\d+)s$/, (m) => `${m[1]} 秒后重试`],
+  [/^retrying in (\d+)s$/, (m) => `${m[1]} 秒后重试`],
 
   /* 航班兜底时的覆盖范围标签。原文由服务端拼成
      `${ADSBLOL_POINT_RADIUS_NM}nm regional fallback`
      （server/providers/aircraft/opensky.js），半径是常量但会改，所以用规则。 */
   [/^(\d+)nm regional fallback$/, (m) => `${m[1]}nm 区域兜底`],
 
-  /* 图层开关的 aria-label："Satellites: OFF" */
+  /* 图层开关的 aria-label / 按钮文字："Satellites: OFF"、"Radio: UNAVAILABLE"。
+     状态来自 src/ui/layerPanel.js:5 FEED_STATE_LABELS 与 :549 的生命周期分支，
+     取值是 ON/OFF/LOADING/DEGRADED/STALE/FALLBACK/UNAVAILABLE/UNCERTAIN/
+     ENABLING/DISABLING —— 早期只写了 OFF|ON，其余八种状态一律漏译。 */
   [
-    /^(.+?):\s*(OFF|ON)$/,
-    (m) => `${dict[m[1]] || m[1]}：${m[2] === 'OFF' ? '关' : '开'}`,
+    /^(.+?):\s*(ON|OFF|LOADING|DEGRADED|STALE|FALLBACK|UNAVAILABLE|UNCERTAIN|ENABLING|DISABLING)$/,
+    (m) => `${dict[m[1]] || m[1]}：${dict[m[2]] || m[2]}`,
   ],
 
-  /* 密钥数量提示："POWER UP · 8 KEYS WAITING" */
-  [/^POWER UP · (\d+) KEYS WAITING$/, (m) => `通电 · 还有 ${m[1]} 个密钥`],
+  /* 机舱云量："CLOUD 70%"（src/ui/cockpitBriefing.js:244） */
+  [/^CLOUD (\d+)%$/, (m) => `云量 ${m[1]}%`],
 
-  /* 场景镜头："Shot 3" / "RETRO · OFF · 6.0s + 1.0s" */
+  /* 密钥数量提示："POWER UP · 8 KEYS WAITING" */
+  [/^POWER UP · (\d+) (KEY|KEYS) WAITING$/, (m) => `通电 · 还有 ${m[1]} 个密钥`],
+
+  /* 场景镜头："Shot 3" / "NORMAL · OFF · 6.0s + 1.0s"。
+     原文由 src/ui/scenePresentation.js:87 拼成
+     `${style.toUpperCase()} · ${mode} · ${dur}s + ${hold}s`：
+     第一段是 shot.visual.style（recipes.js 用 retro / surveillance / thermal，
+     其余落到 normal），第二段是检测模式，取值见 src/data/detection.js:77
+     MODE_LABELS = ['OFF','SPARSE','BALANCED','DENSE']。
+     早期版本把第二段当成 OFF/ON 布尔，四种模式只覆盖了一种；其余三种
+     靠 ` · ` 分段翻译，产出「RETRO · 密集 · 6.0s」这种半中半英串。 */
   [/^Shot (\d+)$/, (m) => `镜头 ${m[1]}`],
-  [/^RETRO · (OFF|ON) · ([\d.]+)s \+ ([\d.]+)s$/, (m) => `回溯 · ${m[1] === 'OFF' ? '关' : '开'} · ${m[2]}秒 + ${m[3]}秒`],
+  [
+    /^(NORMAL|RETRO|SURVEILLANCE|THERMAL) · (OFF|SPARSE|BALANCED|DENSE) · ([\d.]+)s \+ ([\d.]+)s$/,
+    (m) => {
+      const style = {
+        NORMAL: '标准',
+        RETRO: '复古 CRT',
+        SURVEILLANCE: '监控',
+        THERMAL: '热成像',
+      }[m[1]];
+      const mode = { OFF: '关', SPARSE: '稀疏', BALANCED: '均衡', DENSE: '密集' }[m[2]];
+      return `${style} · ${mode} · ${m[3]}秒 + ${m[4]}秒`;
+    },
+  ],
 
   /* 简报页码："1 / 3" 保持不变，无需规则 */
 
@@ -700,10 +825,48 @@ export const rules = [
   /* 位置托盘：正在飞往某地 —— 地名是动态的 */
   [/^Flying to (.+)\.\.\.$/, (m) => `正飞往 ${m[1]}…`],
 
-  /* 语音模型提示："Voice model: gpt-realtime-2 — …"，模型 id 会变 */
+  /* 语音模型提示（src/voice/realtimeController.js:1824 tierButton.title）：
+     模型 id 会变，动作也随当前档位在 mini / standard 之间翻转；
+     另有会话进行中档位不一致时的 "Next session: …" 分支。 */
   [
-    /^Voice model: (.+?) — click to switch to mini; applies next session$/,
-    (m) => `语音模型：${m[1]} — 点击切换到迷你版；下次会话生效`,
+    /^Voice model: (.+?) — click to switch to (mini|standard); applies next session$/,
+    (m) =>
+      `语音模型：${m[1]} — 点击切换到${m[2] === 'mini' ? '迷你版' : '标准版'}；下次会话生效`,
+  ],
+  [
+    /^Next session: (.+?) — this session stays on (.+)$/,
+    (m) => `下次会话：${m[1]} — 本次会话仍使用 ${m[2]}`,
+  ],
+
+  /* 会话费用 tooltip（src/voice/realtimeController.js:1837 costValue.title）：
+     模型 id、响应次数、两个阈值（voiceCost.js 默认 ~$2.00 / ~$5.00，用户可改）
+     以及末尾的 note 都是运行期插值的。早期只把「默认态那一串」冻结成词条，
+     一用就回落英文。 */
+  [
+    /^Estimated session cost on (.+?) — (\d+) response\(s\)\. Warns at ~\$([\d.]+), ends the session at ~\$([\d.]+)\. Estimate is incomplete — a response was still in flight when the session ended, so its usage was never reported\.$/,
+    (m) =>
+      `${m[1]} 上的预估会话费用 — ${m[2]} 次响应。约 $${m[3]} 时警告，约 $${m[4]} 时结束会话。估算不完整 — 会话结束时仍有响应在途，其用量未被上报。`,
+  ],
+  [
+    /^Estimated session cost on (.+?) — (\d+) response\(s\)\. Warns at ~\$([\d.]+), ends the session at ~\$([\d.]+)\.$/,
+    (m) => `${m[1]} 上的预估会话费用 — ${m[2]} 次响应。约 $${m[3]} 时警告，约 $${m[4]} 时结束会话。`,
+  ],
+  [
+    /^Estimate is incomplete — a response was still in flight when the session ended, so its usage was never reported\.$/,
+    () => '估算不完整 — 会话结束时仍有响应在途，其用量未被上报。',
+  ],
+
+  /* Overpass 重试组合串（src/data/installationFeedback.js:14）：
+     原文是 `${原因} — ${倒计时}`，用**破折号**拼接。翻译层的分段只按
+     ` · ` 切，切不动这一串；加载浮层自己 split(' — ') 后逐段翻译，所以
+     同一条状态浮层能翻、图层面板不能翻。这里补整串规则抹平差异。 */
+  [
+    /^(Overpass (?:temporarily unavailable|rate-limited|timed out|could not complete the query)) — retrying in (\d+)s$/,
+    (m) => `${dict[m[1]] || m[1]} — ${m[2]} 秒后重试`,
+  ],
+  [
+    /^(Overpass (?:temporarily unavailable|rate-limited|timed out|could not complete the query)) — retry pending$/,
+    (m) => `${dict[m[1]] || m[1]} — 重试待定`,
   ],
 
   /* 组合式 tooltip："Expand LOCATION" / "Collapse DATA LAYERS"。

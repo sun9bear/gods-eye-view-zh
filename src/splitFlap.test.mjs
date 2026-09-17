@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {
   planSplitFlap,
   visibleGlyphs,
+  setSplitFlapText,
+  disposeSplitFlap,
   FLAP_CHAR_MS,
   FLAP_STAGGER_MS,
   FLAP_MAX_TOTAL_MS,
@@ -336,4 +338,357 @@ test('visibleGlyphs is defensive about junk input', () => {
   // Negative and non-finite elapsed times read as "nothing has turned yet".
   assert.equal(visibleGlyphs(plan, -500), 'AB');
   assert.equal(visibleGlyphs(plan, NaN), 'AB');
+});
+
+// ── DOM behaviour: i18n translation layer + raw-input cache ─────────────────
+//
+// These exercise the live DOM path (previously untested). The element stand-in
+// reuses the shape from mapStackChips.test.mjs and extends it with the
+// two-child shell, real Text nodes, classList, a style object, a
+// checkVisibility short-circuit, and a width measurement derived from the
+// visible text — the minimum the split-flap module touches.
+
+const realSetTimeout = globalThis.setTimeout;
+
+/** An isolated mock document + element factory, with its own text-write counter. */
+function createDom() {
+  let textWrites = 0;
+
+  function createTextNode(value = '') {
+    let data = String(value);
+    return {
+      nodeType: 3,
+      get data() {
+        return data;
+      },
+      set data(value) {
+        data = String(value);
+        textWrites += 1;
+      },
+    };
+  }
+
+  function makeClassList(element) {
+    const set = () => new Set(element.className.split(/\s+/).filter(Boolean));
+    const apply = (set) => {
+      element.className = [...set].join(' ');
+    };
+    return {
+      add(...names) {
+        const s = set();
+        for (const name of names) s.add(name);
+        apply(s);
+      },
+      remove(...names) {
+        const s = set();
+        for (const name of names) s.delete(name);
+        apply(s);
+      },
+      contains(name) {
+        return set().has(name);
+      },
+      toggle(name, force) {
+        const s = set();
+        const want = force === undefined ? !s.has(name) : !!force;
+        if (want) s.add(name);
+        else s.delete(name);
+        apply(s);
+      },
+    };
+  }
+
+  function makeElement(tagName = 'div') {
+    const element = {
+      tagName,
+      nodeType: 1,
+      className: '',
+      title: '',
+      dataset: {},
+      attributes: {},
+      listeners: {},
+      children: [],
+      parentElement: null,
+      isConnected: true,
+      style: makeStyle(),
+    };
+    element.classList = makeClassList(element);
+    element.ownerDocument = document;
+
+    Object.defineProperty(element, 'firstChild', {
+      get() {
+        return element.children[0] ?? null;
+      },
+    });
+    Object.defineProperty(element, 'firstElementChild', {
+      get() {
+        return element.children.find((c) => c.nodeType === 1) ?? null;
+      },
+    });
+    Object.defineProperty(element, 'nextElementSibling', {
+      get() {
+        const parent = element.parentElement;
+        if (!parent) return null;
+        const i = parent.children.indexOf(element);
+        for (let j = i + 1; j < parent.children.length; j += 1) {
+          if (parent.children[j].nodeType === 1) return parent.children[j];
+        }
+        return null;
+      },
+    });
+    Object.defineProperty(element, 'textContent', {
+      get() {
+        let out = '';
+        const walk = (node) => {
+          for (const child of node.children) {
+            if (child.nodeType === 3) out += child.data;
+            else walk(child);
+          }
+        };
+        walk(element);
+        return out;
+      },
+      set(value) {
+        const node = createTextNode(value);
+        node.parentElement = element;
+        element.children = [node];
+      },
+    });
+
+    element.appendChild = (child) => {
+      child.parentElement = element;
+      element.children.push(child);
+      return child;
+    };
+    element.append = (...nodes) => {
+      for (const n of nodes) element.appendChild(n);
+    };
+    element.replaceChildren = (...nodes) => {
+      element.children = [];
+      for (const n of nodes) element.appendChild(n);
+    };
+    element.setAttribute = (name, value) => {
+      element.attributes[name] = String(value);
+    };
+    element.getAttribute = (name) => element.attributes[name] ?? null;
+    element.removeAttribute = (name) => {
+      delete element.attributes[name];
+    };
+    element.addEventListener = (type, handler) => {
+      (element.listeners[type] ||= []).push(handler);
+    };
+    element.removeEventListener = (type, handler) => {
+      const list = element.listeners[type];
+      if (list) element.listeners[type] = list.filter((h) => h !== handler);
+    };
+    element.checkVisibility = () => true;
+    element.getBoundingClientRect = () => {
+      const len = element.textContent.length;
+      return { width: len * 8, height: 0, top: 0, left: 0, right: len * 8, bottom: 0 };
+    };
+    Object.defineProperty(element, 'offsetWidth', { get: () => 0 });
+    element.querySelector = (selector) => {
+      const className = selector.replace(/^\./, '');
+      const stack = [...element.children];
+      while (stack.length) {
+        const node = stack.shift();
+        if (node.nodeType === 1) {
+          if (node.classList.contains(className)) return node;
+          stack.push(...node.children);
+        }
+      }
+      return null;
+    };
+    return element;
+  }
+
+  function makeStyle() {
+    const props = {};
+    return {
+      width: '',
+      setProperty(name, value) {
+        props[name] = String(value);
+      },
+      removeProperty(name) {
+        delete props[name];
+      },
+      getPropertyValue(name) {
+        return props[name] ?? '';
+      },
+    };
+  }
+
+  const document = {
+    createElement: (tagName) => makeElement(tagName),
+    createTextNode,
+    defaultView: {
+      getComputedStyle: () => ({
+        visibility: 'visible',
+        display: 'block',
+        opacity: '1',
+      }),
+    },
+  };
+
+  function makeChip() {
+    const el = makeElement('div');
+    el.ownerDocument = document;
+    return el;
+  }
+
+  return { document, makeChip, textWrites: () => textWrites };
+}
+
+const FAST = { charMs: 2, staggerMs: 2, maxTotalMs: 20 };
+
+test('split-flap DOM behaviour: i18n translation layer and raw-input cache', async (t) => {
+  // Subtests run sequentially so the per-subtest setTimeout override (used to
+  // count scheduled timers) is never observed by a sibling.
+
+  await t.test('without a translation layer the raw input shows and repeat ticks are no-ops', () => {
+    delete globalThis.GEV_I18N;
+    const dom = createDom();
+    const el = dom.makeChip();
+    assert.equal(setSplitFlapText(el, 'LIVE'), true);
+    assert.equal(el.textContent, 'LIVE');
+    assert.equal(setSplitFlapText(el, 'LIVE'), false, 'repeat same input is a no-op');
+    assert.equal(setSplitFlapText(el, 'OFF'), true);
+    assert.equal(el.textContent, 'OFF');
+  });
+
+  await t.test('a genuinely new input flaps and shows the new translation', () => {
+    globalThis.GEV_I18N = {
+      t: (s) => (s === 'LIVE' ? '直播' : s === 'OFF' ? '关闭' : s),
+    };
+    try {
+      const dom = createDom();
+      const el = dom.makeChip();
+      assert.equal(setSplitFlapText(el, 'LIVE', FAST), true);
+      assert.equal(el.textContent, '直播');
+      assert.equal(setSplitFlapText(el, 'OFF', FAST), true);
+      assert.equal(el.textContent, '关闭');
+    } finally {
+      delete globalThis.GEV_I18N;
+    }
+  });
+
+  await t.test('after the i18n layer rewrites the node, the same input produces no extra write or timer', () => {
+    globalThis.GEV_I18N = { t: (s) => (s === 'LIVE' ? '直播' : s) };
+    try {
+      // Wrap setTimeout for an isolated timer count, restored before the subtest
+      // returns so no sibling observes it.
+      const real = globalThis.setTimeout;
+      let timerCount = 0;
+      globalThis.setTimeout = (fn, ms, ...a) => {
+        timerCount += 1;
+        return real(fn, ms, ...a);
+      };
+      try {
+        const dom = createDom();
+        const el = dom.makeChip();
+        const writes0 = dom.textWrites();
+        assert.equal(setSplitFlapText(el, 'LIVE', FAST), true);
+        const writesAfterFirst = dom.textWrites() - writes0;
+        assert.ok(writesAfterFirst >= 1, 'first call writes the display');
+        assert.equal(timerCount, 1, 'exactly one timer scheduled for the change');
+
+        // The i18n layer re-runs and rewrites the node to an updated gloss.
+        el.querySelector('.gev-flap-text').firstChild.data = '現場直播';
+        const writesBeforeRepeat = dom.textWrites();
+        const timersBeforeRepeat = timerCount;
+        const ok2 = setSplitFlapText(el, 'LIVE', FAST);
+        assert.equal(ok2, false, 'same raw input is a no-op despite the translated node');
+        assert.equal(dom.textWrites(), writesBeforeRepeat, 'no duplicate text write');
+        assert.equal(timerCount, timersBeforeRepeat, 'no duplicate timer');
+      } finally {
+        globalThis.setTimeout = real;
+      }
+    } finally {
+      delete globalThis.GEV_I18N;
+    }
+  });
+
+  await t.test('settle strips the cells after translation (race token, not textContent)', async () => {
+    globalThis.GEV_I18N = {
+      t: (s) => (s === 'LIVE' ? '直播' : s === 'OFF' ? '關閉' : s),
+    };
+    try {
+      const dom = createDom();
+      const el = dom.makeChip();
+      assert.equal(setSplitFlapText(el, 'LIVE', FAST), true);
+      assert.equal(el.textContent, '直播');
+      assert.ok(
+        el.querySelector('.gev-flap-cells').children.length > 0,
+        'cells present mid-cascade',
+      );
+      // Wait out the single settle timer; textContent is translated, yet settle
+      // must still finish because it keys off the cascade token, not the node.
+      await new Promise((r) => realSetTimeout(r, 400));
+      assert.equal(
+        el.querySelector('.gev-flap-cells').children.length,
+        0,
+        'cells stripped after settle',
+      );
+      assert.equal(el.classList.contains('gev-flap-active'), false, 'active class cleared');
+      assert.equal(el.textContent, '直播', 'settled display survives and is translated');
+    } finally {
+      delete globalThis.GEV_I18N;
+    }
+  });
+
+  await t.test('a language switch rewrites the translation immediately and cancels the in-flight flap', async () => {
+    globalThis.GEV_I18N = {
+      t: (s) => (s === 'LIVE' ? '直播' : s === 'OFF' ? '關閉' : s),
+    };
+    try {
+      const dom = createDom();
+      const el = dom.makeChip();
+      assert.equal(setSplitFlapText(el, 'LIVE', FAST), true);
+      assert.equal(el.textContent, '直播');
+      // Mid-cascade the language flips to a different gloss of the SAME input.
+      globalThis.GEV_I18N = {
+        t: (s) => (s === 'LIVE' ? 'LIVE(中)' : s === 'OFF' ? 'OFF(中)' : s),
+      };
+      const re = setSplitFlapText(el, 'LIVE', FAST);
+      assert.equal(re, false, 'same input, only display changed -> no new flap');
+      assert.equal(el.textContent, 'LIVE(中)', 'new translation written immediately');
+      assert.equal(
+        el.querySelector('.gev-flap-cells').children.length,
+        0,
+        'cancelled cascade cells gone',
+      );
+      assert.equal(el.classList.contains('gev-flap-active'), false);
+      // No lingering timer should re-override the new display.
+      const writesBefore = dom.textWrites();
+      await new Promise((r) => realSetTimeout(r, 400));
+      assert.equal(el.textContent, 'LIVE(中)');
+      assert.equal(dom.textWrites(), writesBefore, 'no late write after cancel');
+    } finally {
+      delete globalThis.GEV_I18N;
+    }
+  });
+
+  await t.test('dispose clears the input cache so a reused element re-syncs', () => {
+    delete globalThis.GEV_I18N;
+    const dom = createDom();
+    const el = dom.makeChip();
+    assert.equal(setSplitFlapText(el, 'LIVE'), true);
+    assert.equal(el.textContent, 'LIVE');
+    // The rendered display diverged out-of-band (e.g. an owner swap rewrote it
+    // or an i18n pass re-ran). The raw-input cache still believes "LIVE" is the
+    // settled value, so a bare tick is a no-op.
+    el.querySelector('.gev-flap-text').firstChild.data = 'OFF';
+    assert.equal(setSplitFlapText(el, 'LIVE'), false, 'stale cache hides the divergence');
+    // Dispose drops that cache; the same input is now re-evaluated and the
+    // display is re-synced, which is what makes reuse safe.
+    disposeSplitFlap(el);
+    assert.equal(
+      setSplitFlapText(el, 'LIVE'),
+      true,
+      'dispose lets the reused element re-render',
+    );
+    assert.equal(el.textContent, 'LIVE');
+    // A fresh different input still works after reuse.
+    assert.equal(setSplitFlapText(el, 'OFF'), true);
+    assert.equal(el.textContent, 'OFF');
+  });
 });

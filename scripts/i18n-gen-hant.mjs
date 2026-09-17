@@ -6,9 +6,10 @@
  * 手工维护两份必然漂移。**简体那份是唯一真源**，繁體由本脚本生成。
  * 改完 public/i18n/dicts/zh-Hans.js，重跑一次即可。
  *
- * 依赖：opencc-js **不是**项目依赖（只在生成时需要）。先装：
- *   npm i -D opencc-js
- * 跑完可以再卸掉，生成出来的 zh-Hant.js 是自包含的静态文件。
+ * 依赖：opencc-js **不是**项目依赖，且**不要写进 package.json / package-lock.json**（避免污染 lock）。
+ * 在隔离工具目录安装：`npm install --prefix <工具目录> opencc-js --no-save --package-lock=false --ignore-scripts`。
+ * 使用隔离副本时，设 OPENCC_MODULE 为其 ESM 入口绝对路径（opencc-js/dist/esm/full.js）。
+ * 生成出来的 zh-Hant.js 是自包含的静态文件。
  *
  * 用法（仓库根目录）：
  *   npm run i18n:gen-hant
@@ -29,9 +30,14 @@ const [srcPath, outPath] = process.argv.slice(2).length >= 2 ? process.argv.slic
 
 let OpenCC;
 try {
-  OpenCC = await import('opencc-js');
-} catch {
-  console.error('缺少依赖 opencc-js。请先执行：\n  npm i -D opencc-js');
+  // OPENCC_MODULE overrides resolution; native ESM ignores NODE_PATH.
+  const entry = process.env.OPENCC_MODULE || 'opencc-js';
+  OpenCC = await import(
+    path.isAbsolute(entry) ? pathToFileURL(entry).href : entry
+  );
+} catch (error) {
+  console.error('无法加载 opencc-js。请在隔离工具目录安装，并设置 OPENCC_MODULE 为其 ESM 入口绝对路径（dist/esm/full.js）。');
+  console.error(error);
   process.exit(1);
 }
 

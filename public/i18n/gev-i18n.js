@@ -2,10 +2,10 @@
  * God's Eye View — 多语言界面运行时翻译层
  * ======================================
  *
- * 设计原则：**不改动任何原有源码**（除 index.html 里引入本文件的那一行）。
+ * 设计原则：**尽量不改写原有业务逻辑**；本分支在 `src/` 侧只加了少量可选翻译钩子（worldOverlay.js / frames.js / detectionDraw.js），无翻译全局时原样返回。
  * 所有翻译都在运行时对 DOM 做，因此：
  *   - 上游更新不会与本文件冲突
- *   - 项目的 305 个测试文件（大量断言精确英文串）保持全绿
+ *   - 项目的 305 个测试文件（大量断言精确英文串）在本分支下仍通过——但**测试通过不等于所有运行时行为与英文版逐位一致**
  *   - 任意语言之间可随时互切，随时回到英文原文
  *
  * 覆盖范围：
@@ -112,6 +112,28 @@ function hasSkippedAncestor(node) {
   let el = node.nodeType === 1 ? node : node.parentElement;
   while (el) {
     if (shouldSkip(el)) return true;
+    el = el.parentElement;
+  }
+  return false;
+}
+
+/**
+ * `data-gev-i18n-skip-text`：只跳过**文本节点**，属性（title / aria-label）
+ * 照常翻译。
+ *
+ * 为什么需要它：引擎按文本串匹配，同一个英文串在两处含义不同时无法区分。
+ * 实例——路由芯片的可视标签是 `CLEAR`（= 清除航线），机舱天气读数也是
+ * `CLEAR`（= 晴）。给全局加 `CLEAR` 键会把芯片变成「晴」（明显错误），
+ * 不给则天气读数永远是英文。用处更小的那一侧显式让开，由该元素自己
+ * 承担未翻译的可视标签；它的 title 仍然会被翻译，所以按钮依然可读。
+ *
+ * 与 `data-gev-noi18n` 的区别：后者连属性一起跳过整棵子树，用于图标字体
+ * 这类完全不该碰的元素。
+ */
+function hasTextSkipAncestor(node) {
+  let el = node.nodeType === 1 ? node : node.parentElement;
+  while (el) {
+    if (el.hasAttribute && el.hasAttribute('data-gev-i18n-skip-text')) return true;
     el = el.parentElement;
   }
   return false;
@@ -349,6 +371,16 @@ function seedOriginal(current) {
 
 /** 决定一个文本节点当前应显示什么，并落地 */
 function applyTextNode(node) {
+  if (hasSkippedAncestor(node)) return;
+  if (hasTextSkipAncestor(node)) {
+    // 属性可能是运行期才加上的，此前若已翻译过，这里退回原文快照
+    const orig = ORIGINAL.get(node);
+    if (orig !== undefined && node.nodeValue !== orig) {
+      node.nodeValue = orig;
+      APPLIED.set(node, orig);
+    }
+    return;
+  }
   const current = node.nodeValue;
   if (!current) return;
 
@@ -402,7 +434,7 @@ function handleAttrs(el) {
 }
 
 function walk(root) {
-  if (!root) return;
+  if (!root || hasSkippedAncestor(root)) return;
   if (root.nodeType === 3) {
     applyTextNode(root);
     return;
@@ -439,6 +471,7 @@ function flush() {
     if (n.nodeType === 3) applyTextNode(n);
     else walk(n);
   }
+  if (!document.getElementById('gev-language-select')?.dataset.initialized) syncLanguageSelect();
 }
 
 function enqueue(node) {
@@ -473,7 +506,28 @@ function startObserving() {
 
 /* ------------------------------------------------------------- 对外 API */
 
+const languageLabels = { en: 'Language', 'zh-Hans': '语言', 'zh-Hant': '語言', ja: '言語', ko: '언어' };
+function syncLanguageSelect() {
+  const select = document.getElementById('gev-language-select');
+  if (!select) return;
+  if (!select.dataset.initialized) {
+    select.dataset.initialized = 'true';
+    for (const item of LANGUAGE_LIST) {
+      const option = document.createElement('option');
+      option.value = item.tag;
+      option.lang = item.tag;
+      option.textContent = item.label;
+      select.append(option);
+    }
+    select.addEventListener('change', () => setLang(select.value));
+  }
+  select.value = lang;
+  select.setAttribute('aria-label', languageLabels[lang] || 'Language');
+  select.title = `${languageLabels[lang] || 'Language'} / Ctrl+Alt+L`;
+}
+
 function applyAll() {
+  syncLanguageSelect();
   if (document.body) walk(document.body);
   if (document.documentElement) document.documentElement.setAttribute('lang', lang);
 }
@@ -493,6 +547,7 @@ function setLang(next) {
   // 全量重走一遍即可：每个节点都从 ORIGINAL 里的英文原文重新渲染，
   // 所以任意语言之间互切都成立（简体 → 繁體 → 英文 → 简体…）
   applyAll();
+  window.dispatchEvent(new CustomEvent('gev:language-changed', { detail: { lang } }));
   return lang;
 }
 

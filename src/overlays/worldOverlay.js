@@ -41,6 +41,23 @@ function overlayText(value) {
   return typeof t === 'function' ? t(text) : text;
 }
 
+/** Uppercase the (already translated) title and apply the char cap. */
+function makeThumbnailTitle(title, thumbnailTitleChars) {
+  const text = String(title ?? '').toUpperCase();
+  const chars = Math.max(0, Math.floor(Number(thumbnailTitleChars) || 0));
+  return chars > 0 ? text.slice(0, chars) : text;
+}
+
+/**
+ * The thumbnail title is derived from the *translated* card title, never the
+ * raw source string: a thumbnail repaint must follow the language, exactly like
+ * the card title. Non-thumbnail variants carry no thumbnail title.
+ */
+function computeThumbnailTitle(title, variant, thumbnailTitleChars) {
+  if (variant !== 'thumbnail') return '';
+  return makeThumbnailTitle(title, thumbnailTitleChars);
+}
+
 const ROOT_ID = 'world-overlay-root';
 const CANVAS_ID = 'world-overlay-canvas';
 const DETECTION_SURFACE_ID = 'world-overlay-detection-surface';
@@ -177,6 +194,7 @@ let _mutationObserver = null;
 let _observedOccluderElements = new WeakSet();
 let _occluderRefreshTimer = null;
 let _cockpitModeHandler = null;
+let _languageChangeHandler = null;
 let _windowResizeHandler = null;
 let _cockpitActive = false;
 /**
@@ -428,14 +446,26 @@ export function normalizeOverlayEntry(sourceId, entry) {
   if (!VALID_VARIANTS.has(variant)) {
     throw new TypeError(`Unsupported WorldOverlay variant: ${variant}`);
   }
+  // Snapshot the ORIGINAL (pre-translation) title/details exactly once. The
+  // rendered `title`/`details` are translated from this snapshot now and again
+  // whenever the language changes — but the source accessor is never re-read, so
+  // a throwing or mutating accessor can only affect this one normalization.
+  const sourceTitle = String(entry.title ?? '');
+  const sourceDetails = Array.isArray(entry.details)
+    ? entry.details.map((line) => String(line ?? ''))
+    : [];
+  const translatedTitle = overlayText(sourceTitle);
+  const translatedDetails = sourceDetails.map((line) => overlayText(line));
   const normalized = {
     id,
     source,
     position: entry.position,
     cullPosition: snapshotCullPosition(entry),
     variant,
-    title: overlayText(entry.title ?? ''),
-    details: Array.isArray(entry.details) ? entry.details.map((line) => overlayText(line)) : [],
+    title: translatedTitle,
+    details: translatedDetails,
+    _overlaySourceTitle: sourceTitle,
+    _overlaySourceDetails: sourceDetails,
     accent: entry.accent || WORLD_OVERLAY_STYLE.accent,
     paintLane: entry.paintLane,
     priority: Number.isFinite(Number(entry.priority)) ? Number(entry.priority) : 0,
@@ -552,12 +582,7 @@ export function normalizeOverlayEntry(sourceId, entry) {
     _overlayTrackDisplayTitle: null,
     _overlayTrackDisplayDetail: null,
     _overlayTrackDisplayText: '',
-    _overlayThumbnailTitle: variant === 'thumbnail'
-      ? String(entry.title ?? '').toUpperCase().slice(
-        0,
-        Math.max(0, Math.floor(Number(entry.thumbnailTitleChars) || 0)) || undefined,
-      )
-      : '',
+    _overlayThumbnailTitle: computeThumbnailTitle(translatedTitle, variant, entry.thumbnailTitleChars),
   };
   normalized._overlayKey = entryKey(source, id);
   normalized._cohortPriority = normalized.priority;
@@ -746,6 +771,41 @@ function invalidateHost({ solve = true, layout = false } = {}) {
   _hitRectCount = 0;
   _paintRectByKey.clear();
   _viewer?.scene?.requestRender?.();
+}
+
+/**
+ * Re-translate every cached entry from its original-language snapshot after the
+ * i18n layer swaps languages. This must NOT re-read the source accessor or
+ * re-run normalization — the once-captured snapshot is the only input, so a
+ * language flip is a pure in-place update of already-loaded entries.
+ *
+ * The rendered `title`/`details` and `_overlayThumbnailTitle` are recomputed,
+ * and the per-entry measured layout plus the track-display readout cache are
+ * reset: translated text changes the measured card size and the cached
+ * `TITLE · DETAIL` string, so both must be recomputed on the next frame. The
+ * solve is invalidated so placements (which depend on size) are recomputed.
+ */
+function refreshOverlayTranslationsOnLanguageChange() {
+  if (_destroyed || !_viewer) return;
+  for (let s = 0; s < _sourceList.length; s++) {
+    const source = _sourceList[s];
+    for (const entry of source.entries.values()) {
+      if (entry._overlaySourceTitle === undefined) continue;
+      entry.title = overlayText(entry._overlaySourceTitle);
+      entry.details = entry._overlaySourceDetails.map((line) => overlayText(line));
+      entry._overlayThumbnailTitle = computeThumbnailTitle(
+        entry.title,
+        entry.variant,
+        entry.thumbnailTitleChars,
+      );
+      // Translated text changes measured size and the cached track readout.
+      entry._overlayLayout = {};
+      entry._overlayTrackDisplayTitle = null;
+      entry._overlayTrackDisplayDetail = null;
+      entry._overlayTrackDisplayText = '';
+    }
+  }
+  invalidateHost();
 }
 
 function inertPaintLaneHandle() {
@@ -2251,6 +2311,8 @@ export function initWorldOverlay(viewer) {
     invalidateHost();
   };
   window.addEventListener('gev:cockpit-mode-changed', _cockpitModeHandler);
+  _languageChangeHandler = refreshOverlayTranslationsOnLanguageChange;
+  window.addEventListener('gev:language-changed', _languageChangeHandler);
   _removePostRender = viewer.scene.postRender.addEventListener(drawWorldOverlay);
   if (viewer.camera?.moveEnd?.addEventListener) {
     _removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => invalidateHost());
@@ -2282,6 +2344,10 @@ export function destroyWorldOverlay() {
     window.removeEventListener('gev:cockpit-mode-changed', _cockpitModeHandler);
   }
   _cockpitModeHandler = null;
+  if (_languageChangeHandler && typeof window !== 'undefined') {
+    window.removeEventListener('gev:language-changed', _languageChangeHandler);
+  }
+  _languageChangeHandler = null;
   if (_windowResizeHandler && typeof window !== 'undefined') {
     window.removeEventListener('resize', _windowResizeHandler);
   }

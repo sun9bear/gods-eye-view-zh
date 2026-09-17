@@ -322,6 +322,12 @@ export class LayerPanel {
       }
       const state = chip.state || (chip.active ? 'active' : 'idle');
       button.className = `data-toggle-chip chip-${state}${chip.active ? ' active' : ''}`;
+      // 文本消歧：个别芯片的可视标签与其他面板的英文串撞车（见 directions/index.js
+      // 的 CLEAR），标记后翻译层只跳过它的文本，title / aria 照常翻译。
+      // 用可选调用而非 toggleAttribute：测试替身的迷你 DOM 只实现了
+      // setAttribute / getAttribute，没有 toggleAttribute。
+      if (chip.skipTextI18n) button.setAttribute('data-gev-i18n-skip-text', '');
+      else button.removeAttribute?.('data-gev-i18n-skip-text');
       if (button.textContent !== chip.label) button.textContent = chip.label;
       button.title = chip.title || '';
       button.disabled = Boolean(chip.disabled);

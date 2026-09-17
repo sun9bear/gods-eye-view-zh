@@ -161,6 +161,10 @@ export function directionsRowControls(state) {
     state: 'idle',
     title: 'Remove the route and both markers',
     params: { clear: true },
+    // 视觉标签 `CLEAR` 与机舱天气读数 `CLEAR`（= 晴）是同一个英文串，
+    // 运行时翻译层按文本匹配无法区分。让这一侧的可视标签保持英文，
+    // title 仍会被翻译，见 public/i18n/gev-i18n.js 的 skip-text 说明。
+    skipTextI18n: true,
   });
   return {
     chips,

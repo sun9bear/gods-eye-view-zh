@@ -5,6 +5,8 @@ dist
 screenshots/
 qa-shots/
 output/
+# i18n 审计脚本产出的报告与截图（体积以 MB 计，属生成物，不入库）
+outputs/
 .gev-logs/
 .gev-cache/
 i18n-coverage.json
