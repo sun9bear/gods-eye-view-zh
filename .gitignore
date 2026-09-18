@@ -1,6 +1,10 @@
 node_modules
 dist
+# 凭据：.env 及其所有变体（.env.local / .env.production / …）一律不入库，
+# 只有不含任何值的模板 .env.example 保留在版本控制里。
 .env
+.env.*
+!.env.example
 *.log
 screenshots/
 qa-shots/
