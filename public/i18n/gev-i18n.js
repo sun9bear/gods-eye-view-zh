@@ -344,7 +344,9 @@ function render(source) {
     if (!CJK_RE.test(source)) return source;
     const trimmed = source.trim();
     const back = reverseToEnglish(trimmed);
-    return back === null ? source : source.replace(trimmed, back);
+    /* 用函数替换而非字符串替换：译文里若含 $&/$`/$' 等模式串，字符串形式
+       会被 String.replace 特殊解释（字典确实收过带 $ 的词条）。 */
+    return back === null ? source : source.replace(trimmed, () => back);
   }
   const out = translateEnglish(source);
   return out === null ? source : out;
@@ -366,7 +368,7 @@ function seedOriginal(current) {
   const trimmed = current.trim();
   if (!trimmed) return current;
   const back = reverseToEnglish(trimmed);
-  return back === null ? current : current.replace(trimmed, back);
+  return back === null ? current : current.replace(trimmed, () => back);
 }
 
 /** 决定一个文本节点当前应显示什么，并落地 */

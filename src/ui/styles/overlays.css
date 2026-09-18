@@ -252,6 +252,16 @@
   text-overflow: ellipsis;
 }
 
+/* CJK pays letter-spacing on every glyph (~7% extra width at this length), so
+   the fixed 420px summary fits fewer telemetry segments than English. Tighten
+   it for CJK interfaces; html[lang] is maintained by the i18n layer. */
+html:lang(zh-Hans) .hud-summary,
+html:lang(zh-Hant) .hud-summary,
+html:lang(ja) .hud-summary,
+html:lang(ko) .hud-summary {
+  letter-spacing: 0.4px;
+}
+
 .hud-rec {
   font-size: 13px;
   letter-spacing: 2px;

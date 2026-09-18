@@ -47,7 +47,8 @@ export const dict = {
   'loading frames': 'フレームを読み込み中',
   'SIMULATED — ADD TOMTOM KEY FOR LIVE': 'シミュレーション — TomTom キーで実データ',
   'SIMULATED — add TomTom key for live': 'シミュレーション — TomTom キーで実データ',
-  FALLBACK: 'フォールバック',
+  /* 状態チップは短く（9px ボタン内で折り返し防止）。詳細語は説明文側の「フォールバック」を使う。 */
+  FALLBACK: '代替',
   UNAVAILABLE: '利用不可',
   'Failed to fetch': '取得に失敗',
   'feed unavailable': 'フィード利用不可',
@@ -129,9 +130,9 @@ export const dict = {
   Utilities: 'ユーティリティ',
   'Other layers': 'その他のレイヤー',
   Satellites: '衛星',
-  'Live Flights': 'リアルタイム便',
+  'Live Flights': 'ライブ便',
   'Military Flights': '軍用機',
-  'Live Vessels': 'リアルタイム船舶',
+  'Live Vessels': 'ライブ船舶',
   'Street Traffic': '道路の交通量',
   'Bike Share': 'シェアサイクル',
   Cameras: 'カメラ',
@@ -682,7 +683,7 @@ export const dict = {
   'MAPPED INSTALLATION': '地図上の施設',
   'ALPR CAMERA': 'ナンバー読取カメラ',
   VESSEL: '船舶',
-  DOCKED: 'ドッキング中',
+  DOCKED: 'ドッキング済み',
   LAUNCHER: 'ローンチャー',
   SPACECRAFT: '宇宙機',
   PAYLOAD: 'ペイロード',
@@ -748,7 +749,7 @@ export const rules = [
   /* フライトのフォールバック時のカバレッジ表記。
      原文はサーバ側で `${半径}nm regional fallback` として組み立てられる
      （server/providers/aircraft/opensky.js）。半径は定数だが変わり得るので規則で受ける。 */
-  [/^(\d+)nm regional fallback$/, (m) => `${m[1]}nm 広域フォールバック`],
+  [/^(\d+)nm regional fallback$/, (m) => `${m[1]}nm 広域代替`],
 
   /* レイヤーの aria-label / ボタン表記："Satellites: OFF"、"Radio: UNAVAILABLE"。
      状態は src/ui/layerPanel.js:5 FEED_STATE_LABELS と :549 のライフサイクル分岐から

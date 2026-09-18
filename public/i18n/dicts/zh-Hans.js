@@ -56,7 +56,8 @@ export const dict = {
   'loading frames': '正在加载画面',
   'SIMULATED — ADD TOMTOM KEY FOR LIVE': '模拟数据 — 加 TomTom 密钥后为实时',
   'SIMULATED — add TomTom key for live': '模拟 — 加 TomTom 密钥后为实时',
-  'FALLBACK': '回退',
+  /* 状态芯片与描述性文案统一用「兜底」（街景兜底 / 航班兜底 / 区域兜底），避免一半「回退」一半「兜底」。 */
+  'FALLBACK': '兜底',
   'UNAVAILABLE': '不可用',
   'Failed to fetch': '请求失败',
   'feed unavailable': '数据源不可用',
@@ -250,7 +251,7 @@ export const dict = {
   'Label for the drawn shape': '所绘形状的标签',
   'Colour of the drawn shape': '所绘形状的颜色',
   Primary: '主色',
-  Amber: '琥珀',
+  Amber: '琥珀色',
   Cyan: '青色',
   Green: '绿色',
   Red: '红色',
@@ -364,7 +365,8 @@ export const dict = {
   'DISABLING': '禁用中',
   'UNCERTAIN': '状态不明',
   'RADIO STATE UNCERTAIN': '电台状态不明',
-  'DISABLE': '关闭',
+  /* 裸状态词与 DISABLING「禁用中」同族；「关闭」留给 DISMISS / Close 类键，避免撞车。 */
+  'DISABLE': '禁用',
   'STATION TAG': '电台标签',
   'Filter stations by station tag': '按电台标签筛选',
   'NO STATION SELECTED': '未选择电台',
@@ -415,7 +417,7 @@ export const dict = {
   'Close key setup': '关闭密钥设置',
   'GET KEY ↗': '获取密钥 ↗',
   'browser-side': '浏览器侧',
-  'Metered — a billing-enabled account': '按量计费 — 需已开通账单的账号',
+  'Metered — a billing-enabled account': '按量计费 — 需已开通计费的账号',
   'Free key — register, paste, done': '免费密钥 — 注册、粘贴、完成',
   'This key runs in the browser by design — restrict it at the provider (see SECURITY.md)':
     '此密钥按设计在浏览器中运行 — 请在服务商侧做限制（见 SECURITY.md）',

@@ -605,6 +605,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Let the label column shrink inside the flex row so long CJK layer names
+     truncate instead of pushing the ON/OFF button or wrapping to 3 lines. */
+  min-width: 0;
 }
 
 .data-icon {
@@ -618,6 +621,11 @@
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: 0.3px;
+  /* Truncate long localized names (CJK labels run long) — never wrap. */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .data-toggle-right {
@@ -640,6 +648,9 @@
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 1.5px;
+  /* CJK labels (オフ, 開/關) must stay on one line — they used to stack
+     vertically when the row got tight. */
+  white-space: nowrap;
   color: var(--text-dim);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -736,6 +747,8 @@
   font-family: var(--font-mono);
   font-size: 8px;
   letter-spacing: 1.2px;
+  /* Same single-line rule as .data-toggle-btn: CJK chip labels wrap badly. */
+  white-space: nowrap;
   color: var(--text-dim);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);

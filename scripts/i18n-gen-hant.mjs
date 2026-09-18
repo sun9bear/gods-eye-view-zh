@@ -44,7 +44,30 @@ try {
 const convert = OpenCC.default
   ? OpenCC.default.Converter({ from: 'cn', to: 't' })
   : OpenCC.Converter({ from: 'cn', to: 't' });
-const c = (s) => (typeof s === 'string' ? convert(s) : s);
+
+/* OpenCC cn→t 之后的字形修正，逐条说明：
+ *
+ * - 啓→啟、爲→為、賬→帳：cn→t 档位产出的异体字不是台港规范字形
+ *   （台标作 啟/為/帳），全库系统性替换。
+ * - 素裏→素里：地名 Surrey, BC（素里市）。OpenCC 把「里」按方位词转成
+ *   「裏」，但台湾媒体作「素里」；公里/里程/哪裏 这类常用词 OpenCC 的
+ *   词级表已处理正确，只有这个地名漏网。
+ * 新增修正时往这个表里加一行即可，c() 会对所有输出（词条、规则函数源码、
+ * 片段）统一生效。
+ */
+const POSTFIX = [
+  [/素裏/g, '素里'],
+  [/啓/g, '啟'],
+  [/爲/g, '為'],
+  [/賬/g, '帳'],
+];
+
+const c = (s) => {
+  if (typeof s !== 'string') return s;
+  let out = convert(s);
+  for (const [re, to] of POSTFIX) out = out.replace(re, to);
+  return out;
+};
 
 const mod = await import(pathToFileURL(path.resolve(srcPath)).href);
 
@@ -68,6 +91,7 @@ out.push(' * 详见 public/i18n/README.md「新增一种语言」。');
 out.push(' *');
 out.push(' * 转换档位：OpenCC 纯字形转换（cn → t），不做台湾/香港用词替换。');
 out.push(' * 需要台湾用词（软体、资讯、网路）时，把 scripts/i18n-gen-hant.mjs 里的 to 改成 twp。');
+out.push(' * 转换后追加字形修正（啟/為/帳 规范字、地名「素里」保护），见脚本内 POSTFIX 表。');
 out.push(' */');
 out.push('');
 out.push('export const LOCALE = {');
