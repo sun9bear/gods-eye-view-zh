@@ -7,6 +7,8 @@ qa-shots/
 output/
 # i18n 审计脚本产出的报告与截图（体积以 MB 计，属生成物，不入库）
 outputs/
+# ZCode/Mimosa 的 hook 状态与会话台账（其他工具的运行时数据，不入库）
+.mimosa/
 .gev-logs/
 .gev-cache/
 i18n-coverage.json

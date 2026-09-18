@@ -1,5 +1,12 @@
 # Changelog
 
+> **Upstream history, verbatim.** Everything below is the original God's Eye View
+> changelog inherited from
+> [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) —
+> this unofficial multilingual fork does not edit it. For what **this fork**
+> changed (the runtime i18n layer and its supporting edits), see
+> [FORK-NOTICE.md](FORK-NOTICE.md).
+
 - Widen opaque sensor halos to 3 display pixels with a 30 px fleet core while retaining at least 60% opaque core coverage, adding contrast margin through thermal blur and bloom on bright roofs.
 
 - Exclude Noir's intentionally vignetted outer field from transit core measurements and add separate Boston live oblique selection/readability coverage.

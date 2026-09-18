@@ -28,7 +28,7 @@
 | 改动类型 | 文件 |
 |---|---|
 | 新增 | `public/i18n/`（翻译引擎 + 4 份字典 + 说明文档） |
-| 新增 | `scripts/i18n-coverage.mjs`、`scripts/i18n-gen-hant.mjs`、`scripts/i18n-visual-audit.mjs` |
+| 新增 | `scripts/` 下 10 个 `i18n-*.mjs` 辅助脚本（生成 / 对齐 / 审计 / 回归，完整清单见文末「Modifications / 修改记录」表） |
 | 修改 | `index.html`（引入翻译层，1 行） |
 | 修改 | `src/overlays/worldOverlay.js`、`src/layers/cctv/frames.js`、`src/data/detectionDraw.js`（canvas 文案走字典 + 全角宽度修正） |
 | 修改 | `src/data/detectionDraw.test.mjs`（+2 项测试） |
@@ -43,7 +43,7 @@
 - **Canvas 原文快照 + 语言事件重翻**：canvas 文案经 `window.GEV_I18N.t()`；`worldOverlay.js` 在归一化时保存英文原文快照，`gev:language-changed` 时按快照重翻缓存条目并重置布局（引擎的 `t()` 缓存本身也清空，使 CCTV 等按需重绘）；
 - **CCTV / 电台 / 图层生命周期**等动态状态串（如 `CCTV ON`、`ENABLING`、`PAUSE`）已补全到字典；动态插值串（会话费用、模型提示、场景镜头、Overpass 重试组合串、天气与云量）改由**规则**覆盖而非冻结词条。键位对齐与运行时字符串核对见 `scripts/i18n-key-parity.mjs`、`scripts/i18n-claim-audit.mjs`。
 
-测试数字要连日期和批次一起看：**2026-09-17** 主批 3908 项（3899 通过、9 跳过），另两批分别 1 项和 13 项全部通过；合计 **3922 项测试 / 3913 通过 / 9 跳过 / 0 失败**，退出码 0。同日 `scripts/i18n-runtime-test.mjs` 的浏览器运行时回归为 **407 项检查全部通过，0 页面 console 错误**（页面错误已计入判据）；`scripts/i18n-claim-audit.mjs` 的运行时字符串核对为 **61 用例 × 4 语言，漏译 0**。早前文档中的「209/209」是更早一批的检查数，与 407 不是同一批次，已停止引用。这些结果只覆盖受测场景，**不证明与上游逐位一致，也不代表所有真实数据状态和布局均已验收**。
+测试数字要连日期和批次一起看：**2026-09-17** 主批 3908 项（3899 通过、9 跳过），另两批分别 1 项和 13 项全部通过；合计 **3922 项测试 / 3913 通过 / 9 跳过 / 0 失败**，退出码 0。同日 `scripts/i18n-runtime-test.mjs` 的浏览器运行时回归为 **407 项检查全部通过，0 页面 console 错误**（页面错误已计入判据）；`scripts/i18n-claim-audit.mjs` 的运行时字符串核对为 **61 用例 × 4 语言，漏译 0**。**2026-09-18**（译文修正 + CJK 字体栈之后）全量重跑：单元测试同为 3922/3913/9/0，`i18n:parity` 四语对齐，`i18n:strings` 61×4 漏译 0，运行时回归 **408 项通过、0 console 错误**。早前文档中的「209/209」是更早一批的检查数，与 407 不是同一批次，已停止引用。这些结果只覆盖受测场景，**不证明与上游逐位一致，也不代表所有真实数据状态和布局均已验收**。
 
 技术细节、踩坑记录与回归清单见 [`public/i18n/README.md`](public/i18n/README.md)。
 
@@ -141,7 +141,7 @@ Every `src/` call site is an optional hook that translates only when a translati
 - **canvas original-snapshot + language-event re-translate**: canvas text goes through `window.GEV_I18N.t()`; `worldOverlay.js` snapshots the English original at normalization and re-translates cached entries from that snapshot and resets layout on `gev:language-changed` (the engine also clears its `t()` cache so CCTV frames redraw with new text);
 - dynamic status strings for **CCTV / radio / layer lifecycle** (e.g. `CCTV ON`, `ENABLING`, `PAUSE`) are in the dictionary; interpolated strings (session cost, voice-model hints, scene-shot meta, the Overpass retry compound, weather and cloud cover) are covered by **rules** rather than frozen entries. Key parity and runtime-string checks: `scripts/i18n-key-parity.mjs`, `scripts/i18n-claim-audit.mjs`.
 
-Test numbers only mean anything with a date and a batch: on **2026-09-17** the main batch was 3,908 tests (3,899 pass, 9 skip) plus two further batches (1 and 13 tests, all passing): **3,922 tests / 3,913 pass / 9 skip / 0 fail**, exit code 0. The same day `scripts/i18n-runtime-test.mjs` reported **407 checks passing with 0 page console errors** (page errors are now part of the pass criterion), and `scripts/i18n-claim-audit.mjs` reported **61 runtime strings × 4 languages with 0 untranslated**. The “209/209” in earlier revisions is a different, earlier batch and is no longer cited. These results cover tested scenarios only; **they do not establish bit-for-bit upstream equivalence or complete live-state and layout acceptance**.
+Test numbers only mean anything with a date and a batch: on **2026-09-17** the main batch was 3,908 tests (3,899 pass, 9 skip) plus two further batches (1 and 13 tests, all passing): **3,922 tests / 3,913 pass / 9 skip / 0 fail**, exit code 0. The same day `scripts/i18n-runtime-test.mjs` reported **407 checks passing with 0 page console errors** (page errors are now part of the pass criterion), and `scripts/i18n-claim-audit.mjs` reported **61 runtime strings × 4 languages with 0 untranslated**. On **2026-09-18**, after the translation fixes and the CJK font-stack work, a full rerun gave the same unit-test totals (3,922/3,913/9/0), four-language key parity, 61×4 runtime strings with 0 untranslated, and the browser regression at **408 checks passing with 0 console errors**. The “209/209” in earlier revisions is a different, earlier batch and is no longer cited. These results cover tested scenarios only; **they do not establish bit-for-bit upstream equivalence or complete live-state and layout acceptance**.
 
 See [`public/i18n/README.md`](public/i18n/README.md) for the design, the pitfalls, and the
 regression checklist.
@@ -190,6 +190,24 @@ Switching back to English (`Ctrl+Alt+L` or `?lang=en`) can help isolate wording 
 | `scripts/i18n-visual-audit.mjs` | New — layout overflow + mixed-language audit / 新增：布局与混杂审计 |
 | `scripts/i18n-audit-dicts.mjs` | New — dictionary cross-language audit / 新增：字典跨语言审校器 |
 | `scripts/i18n-runtime-test.mjs` | New — headless-browser runtime regression / 新增：无头浏览器运行时回归 |
+| `scripts/i18n-key-parity.mjs` | New — dictionary key parity check / 新增：字典键位对齐检查 |
+| `scripts/i18n-claim-audit.mjs` | New — runtime-string coverage audit (feeds real concatenated strings to `t()`) / 新增：运行时字符串覆盖核对 |
+| `scripts/i18n-component-audit.mjs` | New — isolated component integration check / 新增：隔离组件集成检查 |
+| `scripts/i18n-live-verify.mjs` | New — full-page shell acceptance on the production build / 新增：生产构建页面壳层验收 |
+| `scripts/i18n-restore-diag.mjs` | New — one-off en→zh→en restore diagnostic / 新增：en↔zh 还原诊断 |
+| `src/splitFlap.js` | Flip-state raw-input isolation so DOM translation cannot break idempotency/settle / 翻牌状态原始输入隔离，翻译改写不再破坏翻牌逻辑 |
+| `src/splitFlap.test.mjs` | New test covering repeat calls, settle with a rewritten node, switching translation, and reuse after destroy / 新增一项测试：重复调用、节点被改写后的收尾、切换译文、销毁后复用 |
+| `src/overlays/worldOverlay.test.mjs` | +tests for snapshot re-translation and language-event re-layout / 补快照重翻与语言事件重排断言 |
+| `src/overpassProxy.test.mjs` | Assertion follows the fork User-Agent / 断言随分支 UA 调整 |
+| `src/ui/layerPanel.js` | One attribute write: `data-gev-i18n-skip-text` on chips that declare `skipTextI18n` (the CLEAR chip) / 仅一处属性写入：给声明了 `skipTextI18n` 的芯片（CLEAR）打 `data-gev-i18n-skip-text` |
+| `src/layers/directions/index.js` | Direction chip strings routed through the dictionary / 路线芯片文案走字典 |
+| `src/ui/templates/display-controls.html` | Language `<select>` in the DISPLAY panel / 显示面板新增语言下拉框 |
+| `src/ui/styles/controls.css` | Styles for the language selector / 语言下拉框样式 |
+| `src/ui/styles/foundation.css` | Per-language CJK font fallback chain (`--font-cjk` + `html:lang()`) / 按语言切换的 CJK 字体回退链 |
+| `src/ui/styles/radio.css` | Layer rows: label ellipsis + nowrap on toggle buttons/chips / 图层行标签省略号、开关与芯片禁止折行 |
+| `src/ui/styles/overlays.css` | Tightened `.hud-summary` letter-spacing for CJK / CJK 下收紧 HUD 摘要字距 |
+| `docs/CURRENT-STATE.md` | Fork status notes / 分支状态备注 |
+| `README.md`, `README.zh-Hans.md`, `FORK-NOTICE.md`, `LICENSE` | Fork notices, bilingual docs, license modification record / 分支声明、双语文档与许可修改记录 |
 | `index.html` | Load the translation layer before `main.js` / 在 main.js 之前引入翻译层 |
 | `src/overlays/worldOverlay.js` | Route overlay card text through the dictionary before measurement / 卡片文案先翻译后测量 |
 | `src/layers/cctv/frames.js` | Route fallback status text through the dictionary / 状态兜底文案走字典 |

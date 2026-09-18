@@ -70,14 +70,17 @@ the English original is always one keystroke away.
 
 | Action | How |
 |---|---|
+| Pick from the panel | **Language dropdown in the DISPLAY dock** — the easiest way |
 | Cycle languages | `Ctrl+Alt+L` |
 | Set explicitly | `window.GEV_I18N.set('ja')` |
 | Current language | `window.GEV_I18N.current` |
 | Dictionary size | `window.GEV_I18N.stats()` |
 
 The choice persists in `localStorage['gev.lang']`. Aliases are accepted —
-`zh`/`zh-CN` → Simplified, `zh-TW`/`zh-HK`/`tw`/`hk` → Traditional, `jp` → Japanese,
-`kr` → Korean — and an unrecognised value is ignored rather than blanking the UI.
+`zh`/`zh-CN`/`zh-SG` → Simplified, `zh-TW`/`zh-HK`/`zh-MO`/`tw`/`hk` → Traditional,
+`ja`/`ja-JP`/`jp` → Japanese, `ko`/`ko-KR`/`kr` → Korean — and an unrecognised value
+is ignored rather than blanking the UI. (The alias lists live in each dictionary's
+`LOCALE.aliases`; Macao is Traditional.)
 
 The layer **never changes the upstream English strings**. A dictionary miss falls
 back to English rather than showing a wrong translation, so an upstream wording
@@ -564,6 +567,10 @@ God's Eye View runs on **public data, clear sources, and local-first execution.*
 ---
 
 ## 🧭 What's Next
+
+> **This section is the upstream author's own words, kept verbatim from the
+> original README** — the "we"/"I" below is Bilawal Sidhu, not this fork's
+> maintainer. See [FORK-NOTICE.md](FORK-NOTICE.md).
 
 First — thank you. To everyone who watched the God-view demos and went off to build their own, and to everyone who kept asking for the code: I'm grateful. And when I polled whether this should go open source, you weren't subtle about it:
 
